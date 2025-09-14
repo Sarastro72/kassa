@@ -1,0 +1,197 @@
+
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <title>Kassasystem</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+        }
+        #product-panel {
+            width: 75%;
+            padding: 10px;
+            box-sizing: border-box;
+            display: flex;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            background-color: #f0f0f0;
+        }
+        .product-button {
+            font-size: 20px;
+            padding: 20px;
+            margin: 10px;
+            flex: 1 0 30%;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+        #add-product {
+            font-size: 24px;
+            padding: 10px;
+            margin: 10px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+        }
+        #purchase-panel {
+            width: 25%;
+            padding: 10px;
+            box-sizing: border-box;
+            background-color: #ffffff;
+            border-left: 2px solid #ccc;
+            overflow-y: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 6px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .delete-button {
+            background-color: red;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+        #total-row {
+            font-weight: bold;
+        }
+        dialog {
+            border: none;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        dialog input {
+            margin: 5px 0;
+            padding: 5px;
+            width: 100%;
+        }
+        dialog button {
+            margin-top: 10px;
+            padding: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div id="product-panel">
+        <button id="add-product">+</button>
+    </div>
+    <div id="purchase-panel">
+        <table id="purchase-table">
+            <thead>
+                <tr>
+                    <th>Produkt</th>
+                    <th>Antal</th>
+                    <th>Pris</th>
+                    <th>Totalt</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="purchase-body">
+            </tbody>
+            <tfoot>
+                <tr id="total-row">
+                    <td colspan="3">Totalt</td>
+                    <td id="total-sum">0</td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <dialog id="product-dialog">
+        <form method="dialog">
+            <label>Produktnamn:</label>
+            <input type="text" id="product-name" required>
+            <label>Pris:</label>
+            <input type="number" id="product-price" required>
+            <button id="create-product">Skapa</button>
+            <button onclick="document.getElementById('product-dialog').close()">Avbryt</button>
+        </form>
+    </dialog>
+
+    <script>
+        const productPanel = document.getElementById('product-panel');
+        const addProductBtn = document.getElementById('add-product');
+        const productDialog = document.getElementById('product-dialog');
+        const productNameInput = document.getElementById('product-name');
+        const productPriceInput = document.getElementById('product-price');
+        const createProductBtn = document.getElementById('create-product');
+        const purchaseBody = document.getElementById('purchase-body');
+        const totalSum = document.getElementById('total-sum');
+
+        const purchase = {};
+
+        addProductBtn.addEventListener('click', () => {
+            productNameInput.value = '';
+            productPriceInput.value = '';
+            productDialog.showModal();
+        });
+
+        createProductBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const name = productNameInput.value.trim();
+            const price = parseFloat(productPriceInput.value);
+            if (name && !isNaN(price)) {
+                const btn = document.createElement('button');
+                btn.className = 'product-button';
+                btn.textContent = name + ', ' + price + 'kr';
+                btn.dataset.name = name;
+                btn.dataset.price = price;
+                btn.addEventListener('click', () => addToPurchase(name, price));
+                productPanel.insertBefore(btn, addProductBtn);
+                productDialog.close();
+            }
+        });
+
+        function addToPurchase(name, price) {
+            if (purchase[name]) {
+                purchase[name].quantity += 1;
+            } else {
+                purchase[name] = { price: price, quantity: 1 };
+            }
+            renderPurchase();
+        }
+
+        function renderPurchase() {
+            purchaseBody.innerHTML = '';
+            let total = 0;
+            for (const [name, data] of Object.entries(purchase)) {
+                const row = document.createElement('tr');
+                const totalPrice = data.price * data.quantity;
+                total += totalPrice;
+
+                row.innerHTML = `
+                    <td>${name}</td>
+                    <td>${data.quantity}</td>
+                    <td>${data.price.toFixed(2)}</td>
+                    <td>${totalPrice.toFixed(2)}</td>
+                    <td><button class="delete-button" onclick="deleteProduct('${name}')">🗑️</button></td>
+                `;
+                purchaseBody.appendChild(row);
+            }
+            totalSum.textContent = total.toFixed(2);
+        }
+
+        function deleteProduct(name) {
+            delete purchase[name];
+            renderPurchase();
+        }
+    </script>
+</body>
+</html>
