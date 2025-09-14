@@ -12,7 +12,10 @@
             height: 100vh;
         }
         #product-panel {
+            position: absolute;
+            left: 0px;
             width: 67%;
+            height: 100%;
             padding: 10px;
             box-sizing: border-box;
             display: flex;
@@ -44,7 +47,10 @@
             cursor: pointer;
         }
         #purchase-panel {
+            position: absolute;
+            right: 0px;
             width: 33%;
+            height: 100%;
             padding: 10px;
             box-sizing: border-box;
             background-color: #ffffff;
@@ -88,13 +94,30 @@
         button.buy-button {
             font-size: 20px;
             margin-top: 10px;
-            padding: 5px 25px;
+            padding: 15px;
             position: absolute;
-            right: 10px;
+            left: 5%;
+            width: 90%;
             bottom: 10px;
             background-color: #4CAF50;
             color: white;
             border-radius: 5px;
+        }
+        dialog.qr-dialog {
+            padding: 30px;
+            background-color: #4CAF50;
+        }
+        div.qr-code {
+            padding: 30px;
+            background-color: white;
+            border-radius: 10px;
+        }
+        div.number {
+            color: white;
+            padding: 10px;
+            font-size: 32px;
+            width: 100%;
+            text-align: center;
         }
     </style>
 </head>
@@ -123,7 +146,7 @@
                 </tr>
             </tfoot>
         </table>
-        <button id="buy" class="buy-button">Köp</button>
+        <button id="buy" class="buy-button">Betala</button>
     </div>
 
     <dialog id="product-dialog">
@@ -137,9 +160,11 @@
         </form>
     </dialog>
 
-    <dialog id="qr-dialog">
-        <div id=qr-code></div>
+    <dialog class="qr-dialog" id="qr-dialog">
+        <div class="qr-code" id=qr-code></div>
+        <div class="number">070-403 86 80</div>
         <button id="purchase-done">Klar</button>
+        <button onclick="document.getElementById('qr-dialog').close()">Avbryt</button>
     </dialog>
 
     <!--script
@@ -190,19 +215,19 @@
         purchaseDoneBtn.addEventListener('click', (e) => {
             e.preventDefault();
             purchaseBody.innerHTML = '';
-            qrCode.innerHTML = '';
             qrDialog.close();
         });
 
         buyBtn.addEventListener('click', (e) => {
             e.preventDefault();
             qrDialog.showModal();
+            qrCode.innerHTML = '';
             const amount = totalPrice();
             const url = "https://app.swish.nu/1/p/sw/?sw=0704038681&amt=" + amount + "&cur=SEK&msg=Fika%20F11&src=qr"
             new QRCode(document.getElementById("qr-code"), {
                 text: url,
-                width: 256,
-                height: 256,
+                width: 320,
+                height: 320,
                 colorDark : "#000000",
                 colorLight : "#ffffff",
                 correctLevel : QRCode.CorrectLevel.L
