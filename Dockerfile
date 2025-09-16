@@ -4,3 +4,4 @@ WORKDIR /usr/share/nginx
 
 COPY kassasystem.html html/index.html
 COPY lib/ html/lib/
+COPY static/ html/static/

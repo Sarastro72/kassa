@@ -1,12 +1,10 @@
-version: "3.9"
-
 services:
     app:
-        container_name: app
-        image: app
+        container_name: kassa
+        image: sarastro72/kassa:test
         build:
             context: .
             dockerfile: Dockerfile
         restart: always
         ports:
-            - "8080:80"
+            - "5555:80"
