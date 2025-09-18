@@ -2,31 +2,56 @@
 <!DOCTYPE html>
 <html lang="sv">
 <head>
-    <link rel="icon" type="image/png" href="/static/cash-register.png">
+    <link rel="icon" type="image/png" href="static/cash-register.png">
     <meta charset="UTF-8">
-    <title>Kassasystem</title>
+    <title>Kassa - Kafé F11</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             display: flex;
             height: 100vh;
         }
+        #info-bar {
+            position: absolute;
+            left: 0px;
+            width: 100%;
+            height: 50px;
+            padding: 2px;
+            background-color: #ddd;
+            align-items: center;
+            display: flex;
+            justify-content: center;
+            font-size: 24px;
+        }
         #product-panel {
             position: absolute;
             left: 0px;
+            top: 50px;
+            bottom: 0px;
             width: 67%;
-            height: 100%;
             padding: 10px;
-            box-sizing: border-box;
             background-color: #f0f0f0;
+        }
+        #purchase-panel {
+            position: absolute;
+            right: 0px;
+            top: 50px;
+            bottom: 0px;
+            width: 33%;
+            padding: 10px;
+            background-color: #ffffff;
+            border-left: 2px solid #ccc;
+            overflow-y: auto;
         }
        #products {
             width: 100%;
             height: 100%;
             padding: 0px;
             margin: 0px;
-            box-sizing: border-box;
             display: flex;
             flex-wrap: wrap;
             align-content: flex-start;
@@ -35,7 +60,7 @@
             font-size: 20px;
             padding: 20px;
             margin: 10px;
-            flex: 1 0 30%;
+            flex: 0 0 30%;
             background-color: #4CAF50;
             color: white;
             border: none;
@@ -57,16 +82,26 @@
             height: 50px;
             cursor: pointer;
         }
-        #purchase-panel {
+        #product-dialog {
+            width: 500px;
+        }
+        #info-bar button {
             position: absolute;
-            right: 0px;
-            width: 33%;
-            height: 100%;
-            padding: 10px;
-            box-sizing: border-box;
-            background-color: #ffffff;
-            border-left: 2px solid #ccc;
-            overflow-y: auto;
+            font-size: 24px;
+            padding: 3px;
+            margin: 5px;
+            background-color: #e4e4e4;
+            border: 2px #bbb solid;
+            border-radius: 8px;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+        }
+        button.settings {
+            right: 10px;
+        }
+        button.edit {
+            left: 10px;
         }
         table {
             width: 100%;
@@ -78,48 +113,63 @@
             border-bottom: 1px solid #ddd;
         }
         .delete-button {
-            background-color: red;
+            background-color: #fee;
             color: white;
-            border: none;
+            border: 2px #fcc solid;
             border-radius: 4px;
-            padding: 4px 8px;
+            padding: 2px 6px;
         }
         #total-row {
             font-weight: bold;
         }
         dialog {
-            border: none;
+            border: 2px #888 solid;
             border-radius: 8px;
             padding: 20px;
+            background-color: #eee;
+        }
+        dialog label {
+            margin: 5px 0;
+            padding: 5px;
+            width: 30%;
+            display: inline-block;
         }
         dialog input {
             margin: 5px 0;
             padding: 5px;
-            width: 100%;
+            width: 65%;
         }
         dialog button {
             margin-top: 10px;
-            padding: 8px;
         }
         button {
-            padding: 4px 8px;
+            padding: 8px 24px;
             font-size: 18px;
             cursor: pointer;
-            border-radius: 4px;
+            border-radius: 8px;
+            border-style: solid;
+        }
+        button:hover:not([disabled]) {
+            filter: brightness(1.1);
         }
         button:disabled {
             opacity: 0.3;
-            cursor: none;
+            filter: saturate(50%);
+            cursor: initial;
         }
         button.ok {
-            background-color: lightgreen;
+            background-color: #080;
+            color: white;
+            border-color: #060;
         }
         button.cancel {
-            background-color: lightgrey;
+            background-color: #ccc;
+            color: #444;
+            border-color: #888;
         }
         button.pay-button {
             font-size: 20px;
-            margin-top: 10px;
+            margin-bottom: 10px;
             padding: 15px;
             position: absolute;
             left: 5%;
@@ -128,10 +178,11 @@
             background-color: #4CAF50;
             color: white;
             border-radius: 5px;
+            border: none;
         }
         dialog.qr-dialog {
-            padding: 30px;
             background-color: #4CAF50;
+            padding: 30px;
         }
         div.qr-code {
             padding: 30px;
@@ -145,9 +196,17 @@
             width: 100%;
             text-align: center;
         }
+        .hidden {
+            opacity: 0;
+        }
     </style>
 </head>
 <body>
+    <div id="info-bar">
+        <button class="edit" id="edit">✏️</button>
+        <button class="settings" id="settings">⚙️</button>
+        <span class="header">Kassa - Kafé F11</span>
+    </div>
     <div id="product-panel">
         <div id="products"></div>
         <button id="add-product">+</button>
@@ -165,7 +224,7 @@
             </thead>
             <tbody id="purchase-body">
             </tbody>
-            <tfoot>
+            <tfoot class="hidden" id="total">
                 <tr id="total-row">
                     <td colspan="3">Totalt</td>
                     <td id="total-sum">0</td>
@@ -215,6 +274,7 @@
         const payBtn = document.getElementById('pay');
         const purchaseDoneBtn = document.getElementById('purchase-done');
         const purchaseBody = document.getElementById('purchase-body');
+        const totalRow = document.getElementById('total');
         const totalSum = document.getElementById('total-sum');
 
         var products = JSON.parse(localStorage.getItem("products") || "[]");
@@ -239,7 +299,21 @@
 
         addProductBtn.addEventListener('click', () => {
             showProductDialog();
+            validateProductInput()
         });
+
+        function validateProductInput() {
+            const nameOk = productNameInput.value.trim().length > 0
+            const priceOk = productPriceInput.value.trim().length > 0
+            if (nameOk && priceOk) {
+                createProductBtn.removeAttribute("disabled");
+            } else {
+                createProductBtn.setAttribute("disabled", "disabled");
+            }
+        }
+
+        productNameInput.addEventListener('input', validateProductInput)
+        productPriceInput.addEventListener('input', validateProductInput)
 
         createProductBtn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -322,8 +396,10 @@
             totalSum.textContent = total.toFixed(2);
             if (Object.keys(purchase).length === 0) {
                 payBtn.setAttribute("disabled", "disabled");
+                totalRow.classList.add('hidden');
             } else {
                 payBtn.removeAttribute("disabled");
+                totalRow.classList.remove('hidden');
             }
         }
 
