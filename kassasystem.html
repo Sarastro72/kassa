@@ -4,7 +4,7 @@
 <head>
     <link rel="icon" type="image/png" href="static/cash-register.png">
     <meta charset="UTF-8">
-    <title>Kassa - Kafé F11</title>
+    <title>Kassan</title>
     <style>
         * {
             box-sizing: border-box;
@@ -128,13 +128,30 @@
             padding: 20px;
             background-color: #eee;
         }
-        dialog label {
+        .header-row {
+            width: 100%;
+            padding: 0px;
+            margin: 0px;
+            border: none;
+            border-bottom: 1px #888 solid;
+        }
+        .header-row label {
+            font-size: 20px;
+            padding-left: 10px;
+        }
+        .input-row {
+            width: 100%;
+            padding: 0px;
+            margin: 0px;
+            border: none;
+        }
+        label {
             margin: 5px 0;
             padding: 5px;
             width: 30%;
             display: inline-block;
         }
-        dialog input {
+        .input-row input {
             margin: 5px 0;
             padding: 5px;
             width: 65%;
@@ -203,9 +220,9 @@
 </head>
 <body>
     <div id="info-bar">
-        <button class="edit" id="edit">✏️</button>
-        <button class="settings" id="settings">⚙️</button>
-        <span class="header">Kassa - Kafé F11</span>
+        <button class="edit" id="edit-button">✏️</button>
+        <button class="settings" id="settings-button">⚙️</button>
+        <span class="header" id="title">Kassa</span>
     </div>
     <div id="product-panel">
         <div id="products"></div>
@@ -237,18 +254,47 @@
 
     <dialog id="product-dialog">
         <form method="dialog">
-            <label>Produktnamn:</label>
-            <input type="text" id="product-name" required>
-            <label>Pris:</label>
-            <input type="number" id="product-price" required>
+            <div class="input-row">
+                <label>Produktnamn:</label>
+                <input type="text" id="product-name" required>
+            </div>
+            <div class="input-row">
+                <label>Pris:</label>
+                <input type="text" id="product-price" required>
+            </div>
             <button class="ok" id="create-product">Skapa</button>
             <button class="cancel" onclick="document.getElementById('product-dialog').close()">Avbryt</button>
         </form>
     </dialog>
 
+    <dialog id="settings-dialog">
+        <form method="dialog">
+            <div class="header-row">
+                <label>Allmänt</label>
+            </div>
+            <div class="input-row">
+                <label>Kassanamn:</label>
+                <input type="text" id="cashregister-name">
+            </div>
+            <div class="header-row">
+                <label>Swish</label>
+            </div>
+            <div class="input-row">
+                <label>Nummer:</label>
+                <input type="text" id="swish-number">
+            </div>
+            <div class="input-row">
+                <label>Meddelande:</label>
+                <input type="text" id="swish-message">
+            </div>
+            <button class="ok" id="save-settings">Spara</button>
+            <button class="cancel" onclick="document.getElementById('settings-dialog').close()">Avbryt</button>
+        </form>
+    </dialog>
+
     <dialog class="qr-dialog" id="qr-dialog">
         <div class="qr-code" id=qr-code></div>
-        <div class="number">123 305 91 02</div>
+        <div class="number" id="number"></div>
         <button class="ok" id="purchase-done">Klar</button>
         <button class="cancel" onclick="document.getElementById('qr-dialog').close()">Avbryt</button>
     </dialog>
@@ -263,22 +309,39 @@
     <script src="lib/qrcode.js"></script>
 
     <script>
+        const editBtn = document.getElementById('edit-button');
+        const settingsBtn = document.getElementById('settings-button');
+        const title = document.getElementById('title');
         const productPanel = document.getElementById('products');
         const addProductBtn = document.getElementById('add-product');
-        const productDialog = document.getElementById('product-dialog');
-        const qrDialog = document.getElementById('qr-dialog');
-        const qrCode = document.getElementById('qr-code');
-        const productNameInput = document.getElementById('product-name');
-        const productPriceInput = document.getElementById('product-price');
-        const createProductBtn = document.getElementById('create-product');
-        const payBtn = document.getElementById('pay');
-        const purchaseDoneBtn = document.getElementById('purchase-done');
+
         const purchaseBody = document.getElementById('purchase-body');
         const totalRow = document.getElementById('total');
         const totalSum = document.getElementById('total-sum');
+        const payBtn = document.getElementById('pay');
+        
+        const qrDialog = document.getElementById('qr-dialog');
+        const qrCode = document.getElementById('qr-code');
+        const numberOut = document.getElementById('number');
+        const purchaseDoneBtn = document.getElementById('purchase-done');
+
+        const productDialog = document.getElementById('product-dialog');
+        const productNameInput = document.getElementById('product-name');
+        const productPriceInput = document.getElementById('product-price');
+        const createProductBtn = document.getElementById('create-product');
+
+        const settingsDialog = document.getElementById('settings-dialog');
+        const titleInput = document.getElementById('cashregister-name');
+        const swishNumberInput = document.getElementById('swish-number');
+        const swishMessageInput = document.getElementById('swish-message');
+        const saveSettingsBtn = document.getElementById('save-settings');
+
 
         var products = JSON.parse(localStorage.getItem("products") || "[]");
+        var settings = JSON.parse(localStorage.getItem("settings") || "{}");
+
         var purchase = {};
+        setTitle();
         renderProducts();
 
         document.addEventListener("keydown", (e) => {
@@ -297,9 +360,20 @@
             productDialog.showModal();            
         }
 
+        function showSettingsDialog() {
+            titleInput.value = settings.title || '';
+            swishNumberInput.value = settings.swishNumber || '';
+            swishMessageInput.value = settings.swishMessage || '';
+            settingsDialog.showModal();
+        }
+
         addProductBtn.addEventListener('click', () => {
             showProductDialog();
             validateProductInput()
+        });
+
+        settingsBtn.addEventListener('click', () => {
+            showSettingsDialog();
         });
 
         function validateProductInput() {
@@ -344,6 +418,47 @@
             }
         });
 
+        saveSettingsBtn.addEventListener('click', (e) => {
+            settings.title = titleInput.value.trim();
+            settings.swishNumber = validSwishNumber(swishNumberInput.value.trim());
+            settings.swishMessage = swishMessageInput.value.trim();
+            setTitle();
+            localStorage.setItem("settings", JSON.stringify(settings));
+        });
+
+        function setTitle() {
+            if (settings.title) {
+                const titleValue = "Kassa – " + settings.title
+                document.title = titleValue;
+                title.textContent = titleValue;
+            } else {
+                document.title = "Kassan";
+                title.textContent = "Kassan";
+            }
+        }
+
+        function validSwishNumber(number) {
+            console.log(number)
+            number = number.replace(/\D/g, "");
+            console.log(number)
+            if (number.length != 10) {
+                number = ""
+            }
+            console.log(number)
+            return number;
+        }
+
+        function swishNumber() {
+            number = settings.swishNumber;
+            if (number && number.length == 10) {
+                number=number.substring(0,3) + "-"
+                    + number.substring(3,6) + " "
+                    + number.substring(6,8) + " "
+                    + number.substring(8);
+            }
+            return number;
+        }
+
         purchaseDoneBtn.addEventListener('click', (e) => {
             e.preventDefault();
             purchase = {};
@@ -353,18 +468,22 @@
 
         payBtn.addEventListener('click', (e) => {
             e.preventDefault();
+            const amount = totalPrice();
             qrDialog.showModal();
             qrCode.innerHTML = '';
-            const amount = totalPrice();
-            const url = "https://app.swish.nu/1/p/sw/?sw=1233059102&amt=" + amount + "&cur=SEK&msg=Fika+F11&src=qr"
-            new QRCode(document.getElementById("qr-code"), {
-                text: url,
-                width: 320,
-                height: 320,
-                colorDark : "#000000",
-                colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.L
-            });
+            if (settings.swishNumber) {
+                const message = encodeURIComponent(settings.swishMessage)
+                const url = `https://app.swish.nu/1/p/sw/?sw=${settings.swishNumber}&amt=${amount}&cur=SEK&msg=${message}&src=qr`
+                new QRCode(document.getElementById("qr-code"), {
+                    text: url,
+                    width: 320,
+                    height: 320,
+                    colorDark : "#000000",
+                    colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.L
+                });
+                numberOut.textContent = swishNumber();
+            }
         });
 
         function addToPurchase(name, price) {
@@ -409,9 +528,13 @@
             for (const product of products) {
                 const name = product.name
                 const price = product.price
+                let priceStr = price
+                if (price % 1 != 0) {
+                    priceStr = price.toFixed(2)
+                }
                 const btn = document.createElement('button');
                 btn.className = 'product-button';
-                btn.textContent = name + ', ' + price + 'kr';
+                btn.textContent = name + ', ' + priceStr + 'kr';
                 btn.dataset.name = name;
                 btn.dataset.price = price;
                 btn.addEventListener('click', () => addToPurchase(name, price));
