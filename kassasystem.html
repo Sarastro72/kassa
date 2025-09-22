@@ -197,14 +197,38 @@
             border-radius: 5px;
             border: none;
         }
-        dialog.qr-dialog {
+        dialog.pay-dialog {
             background-color: #4CAF50;
-            padding: 30px;
+            padding: 20px 30px;
         }
-        div.qr-code {
+        div.pay-header {
+            text-align: center;
+            margin-bottom: 12px;
+            font-size: 40px;
+            color: white;
+        }
+        div.amount-small {
+            font-size: 34px;
+            color: white;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        div.pay-info {
             padding: 30px;
             background-color: white;
             border-radius: 10px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+        }
+        div.pay-info span {
+            font-size: 30px;
+            font-weight: bold;
+            width: 100%;
+        }
+        div.pay-info span.amount-large {
+            font-size: 72px;
+            margin: 10px 0px;
         }
         div.number {
             color: white;
@@ -215,6 +239,9 @@
         }
         .hidden {
             opacity: 0;
+        }
+        .removed {
+            display: none;
         }
     </style>
 </head>
@@ -292,11 +319,13 @@
         </form>
     </dialog>
 
-    <dialog class="qr-dialog" id="qr-dialog">
-        <div class="qr-code" id=qr-code></div>
+    <dialog class="pay-dialog" id="pay-dialog">
+        <div class="pay-header" id=pay-header></div>
+        <div class="amount-small" id="amount-small"></div>
+        <div class="pay-info" id=pay-info></div>
         <div class="number" id="number"></div>
         <button class="ok" id="purchase-done">Klar</button>
-        <button class="cancel" onclick="document.getElementById('qr-dialog').close()">Avbryt</button>
+        <button class="cancel" onclick="document.getElementById('pay-dialog').close()">Avbryt</button>
     </dialog>
 
     <!-- Use the remote qrcode script for a true standalone one-file solution -->
@@ -320,8 +349,10 @@
         const totalSum = document.getElementById('total-sum');
         const payBtn = document.getElementById('pay');
         
-        const qrDialog = document.getElementById('qr-dialog');
-        const qrCode = document.getElementById('qr-code');
+        const qrDialog = document.getElementById('pay-dialog');
+        const payHeader = document.getElementById('pay-header');
+        const amountSmall = document.getElementById('amount-small');
+        const payInfo = document.getElementById('pay-info');
         const numberOut = document.getElementById('number');
         const purchaseDoneBtn = document.getElementById('purchase-done');
 
@@ -438,17 +469,14 @@
         }
 
         function validSwishNumber(number) {
-            console.log(number)
             number = number.replace(/\D/g, "");
-            console.log(number)
             if (number.length != 10) {
                 number = ""
             }
-            console.log(number)
             return number;
         }
 
-        function swishNumber() {
+        function formatSwishNumber() {
             number = settings.swishNumber;
             if (number && number.length == 10) {
                 number=number.substring(0,3) + "-"
@@ -470,11 +498,14 @@
             e.preventDefault();
             const amount = totalPrice();
             qrDialog.showModal();
-            qrCode.innerHTML = '';
+            payHeader.textContent=`${settings.title || ''}`;
+            payInfo.innerHTML = '';
             if (settings.swishNumber) {
+                amountSmall.classList.remove("removed");
+                amountSmall.textContent=`${amount} kr`;
                 const message = encodeURIComponent(settings.swishMessage)
                 const url = `https://app.swish.nu/1/p/sw/?sw=${settings.swishNumber}&amt=${amount}&cur=SEK&msg=${message}&src=qr`
-                new QRCode(document.getElementById("qr-code"), {
+                new QRCode(payInfo, {
                     text: url,
                     width: 320,
                     height: 320,
@@ -482,7 +513,11 @@
                     colorLight : "#ffffff",
                     correctLevel : QRCode.CorrectLevel.L
                 });
-                numberOut.textContent = swishNumber();
+                numberOut.textContent = formatSwishNumber();
+            } else {
+                amountSmall.classList.add("removed");
+                payInfo.innerHTML=`<span>Att betala</span>
+                <span class="amount-large">${amount} kr</span>`
             }
         });
 
