@@ -6,6 +6,16 @@
     <meta charset="UTF-8">
     <title>Kassan</title>
     <style>
+        :root {
+            --green: #4CAF50;
+            --cyan: darkturquoise;
+            --blue: deepskyblue;
+            --purple: mediumorchid;
+            --red: mediumvioletred;
+            --orange: orange;
+            --yellow: gold;
+            --brown: saddlebrown;
+        }
         * {
             box-sizing: border-box;
         }
@@ -61,11 +71,12 @@
             padding: 20px;
             margin: 10px;
             flex: 0 0 30%;
-            background-color: #4CAF50;
+            background-color: var(--green);
             color: white;
             border: none;
             cursor: pointer;
             border-radius: 8px;
+            text-shadow: 0px 0px 2px #000;
         }
         #add-product {
             position: absolute;
@@ -123,10 +134,15 @@
             font-weight: bold;
         }
         dialog {
-            border: 2px #888 solid;
+            border: 1px solid #0008;
             border-radius: 8px;
             padding: 20px;
             background-color: #eee;
+            box-shadow: 5px 5px 10px #0006;
+        }
+        dialog::backdrop {
+            backdrop-filter: brightness(0.7);
+            /*filter: blur(4px);*/
         }
         .header-row {
             width: 100%;
@@ -151,10 +167,47 @@
             width: 30%;
             display: inline-block;
         }
-        .input-row input {
+        .input-row input[type="text"] {
             margin: 5px 0;
             padding: 5px;
             width: 65%;
+        }
+        .input-row input[type="radio"] {
+            appearance: none;
+            margin: 0px 4px 0px 0px;
+            width: 25px;
+            height: 25px;
+            border: 1px solid #888;
+            border-radius: 20%;
+            box-shadow: 2px 2px 3px #666;
+        }
+        .input-row input[type="radio"]:checked {
+            border: 2px solid #222;
+            box-shadow: 1px 1px 1px #6668;
+        }
+        .green {
+            background-color: var(--green);
+        }
+        .cyan {
+            background-color: var(--cyan);
+        }
+        .blue {
+            background-color: var(--blue);
+        }
+        .purple {
+            background-color: var(--purple);
+        }
+        .red {
+            background-color: var(--red);
+        }
+        .orange {
+            background-color: var(--orange);
+        }
+        .yellow {
+            background-color: var(--yellow);
+        }
+        .brown {
+            background-color: var(--brown);
         }
         dialog button {
             margin-top: 10px;
@@ -283,13 +336,24 @@
         <form method="dialog">
             <div class="input-row">
                 <label>Produktnamn:</label>
-                <input type="text" id="product-name" required>
+                <input type="text" id="product-name">
             </div>
             <div class="input-row">
                 <label>Pris:</label>
-                <input type="text" id="product-price" required>
+                <input type="text" id="product-price">
             </div>
-            <button class="ok" id="create-product">Skapa</button>
+            <div class="input-row">
+                <label>Färg:</label>
+                <input type="radio" name="color" value="green" class="green" checked="checked">
+                <input type="radio" name="color" value="cyan" class="cyan">
+                <input type="radio" name="color" value="blue" class="blue">
+                <input type="radio" name="color" value="purple" class="purple">
+                <input type="radio" name="color" value="red" class="red">
+                <input type="radio" name="color" value="orange" class="orange">
+                <input type="radio" name="color" value="yellow" class="yellow">
+                <input type="radio" name="color" value="brown" class="brown">
+            </div>
+            <button class="ok" id="create-product">Spara</button>
             <button class="cancel" onclick="document.getElementById('product-dialog').close()">Avbryt</button>
         </form>
     </dialog>
@@ -338,6 +402,8 @@
     <script src="lib/qrcode.js"></script>
 
     <script>
+        const EDIT_TIMEOUT = 1000
+
         const editBtn = document.getElementById('edit-button');
         const settingsBtn = document.getElementById('settings-button');
         const title = document.getElementById('title');
@@ -367,6 +433,8 @@
         const swishMessageInput = document.getElementById('swish-message');
         const saveSettingsBtn = document.getElementById('save-settings');
 
+        var editTimer;
+        var productUnderEdit;
 
         var products = JSON.parse(localStorage.getItem("products") || "[]");
         var settings = JSON.parse(localStorage.getItem("settings") || "{}");
@@ -385,9 +453,29 @@
             }
         });
 
+        function findProduct(name) {
+            for (const prod of products) {
+                if (prod.name.toLowerCase() === name.toLowerCase()) {
+                    return prod
+                }
+            }
+            return null;
+        }
+
         function showProductDialog() {
             productNameInput.value = '';
             productPriceInput.value = '';
+            document.querySelector(`input.green`).checked=true      
+            productDialog.showModal();
+        }
+
+        function editProduct(name) {
+            editTimer = null
+            productUnderEdit = findProduct(name)
+            productNameInput.value = productUnderEdit.name;
+            productPriceInput.value = productUnderEdit.price;
+            let color=productUnderEdit.color || 'green'
+            document.querySelector(`input.${color}`).checked=true
             productDialog.showModal();            
         }
 
@@ -399,6 +487,7 @@
         }
 
         addProductBtn.addEventListener('click', () => {
+            productUnderEdit = null
             showProductDialog();
             validateProductInput()
         });
@@ -424,24 +513,21 @@
             e.preventDefault();
             const name = productNameInput.value.trim();
             const price = parseFloat(productPriceInput.value);
+            const color = document.querySelector('input[name="color"]:checked').value
             if (name && !isNaN(price)) {
-                let existing = undefined;
-                for (const prod of products) {
-                    if (prod.name.toLowerCase() === name.toLowerCase()) {
-                        existing = prod
-                    }
-                }
+                let existing = productUnderEdit || findProduct(name)
                 if (existing) {
                     if (price > 0) {
                         existing.name = name;
                         existing.price = price;
+                        existing.color = color;
                     } else {
                         products = products.filter(function(p) {
                             return p.name !== existing.name
                         });
                     }
                 } else {
-                    products.push({name: name, price: price});
+                    products.push({name: name, price: price, color: color});
                 }
                 localStorage.setItem("products", JSON.stringify(products));
                 renderProducts();
@@ -522,12 +608,16 @@
         });
 
         function addToPurchase(name, price) {
-            if (purchase[name]) {
-                purchase[name].quantity += 1;
-            } else {
-                purchase[name] = { price: price, quantity: 1 };
+            if (editTimer) {
+                clearTimeout(editTimer)
+                editTimer = null
+                if (purchase[name]) {
+                    purchase[name].quantity += 1;
+                } else {
+                    purchase[name] = { price: price, quantity: 1 };
+                }
+                renderPurchase();
             }
-            renderPurchase();
         }
 
         function renderPurchase() {
@@ -557,21 +647,30 @@
             }
         }
 
+        function startEditTimer(name) {
+            if (editTimer) {
+                clearTimeout(editTimer)
+            }
+            editTimer = setTimeout(() => editProduct(name), EDIT_TIMEOUT)
+        }
+
         function renderProducts() {
            // const btn = document.createElement('button')
             productPanel.innerHTML =  '';
             for (const product of products) {
                 const name = product.name
                 const price = product.price
+                const color = product.color || 'green'
                 let priceStr = price
                 if (price % 1 != 0) {
                     priceStr = price.toFixed(2)
                 }
                 const btn = document.createElement('button');
-                btn.className = 'product-button';
+                btn.className = `product-button ${color}`;
                 btn.textContent = name + ', ' + priceStr + 'kr';
                 btn.dataset.name = name;
                 btn.dataset.price = price;
+                btn.addEventListener('mousedown', () => startEditTimer(name));
                 btn.addEventListener('click', () => addToPurchase(name, price));
                 productPanel.appendChild(btn);
             }
