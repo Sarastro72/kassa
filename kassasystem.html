@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="sv">
 <head>
@@ -16,15 +15,18 @@
             --yellow: gold;
             --brown: saddlebrown;
         }
+
         * {
             box-sizing: border-box;
         }
+
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             display: flex;
             height: 100vh;
         }
+
         #info-bar {
             position: absolute;
             left: 0px;
@@ -37,6 +39,7 @@
             justify-content: center;
             font-size: 24px;
         }
+
         #product-panel {
             position: absolute;
             left: 0px;
@@ -46,6 +49,7 @@
             padding: 10px;
             background-color: #f0f0f0;
         }
+
         #purchase-panel {
             position: absolute;
             right: 0px;
@@ -57,7 +61,8 @@
             border-left: 2px solid #ccc;
             overflow-y: auto;
         }
-       #products {
+
+        #products {
             width: 100%;
             height: 100%;
             padding: 0px;
@@ -66,6 +71,7 @@
             flex-wrap: wrap;
             align-content: flex-start;
         }
+
         .product-button {
             font-size: 20px;
             padding: 20px;
@@ -78,6 +84,7 @@
             border-radius: 8px;
             text-shadow: 0px 0px 2px #000;
         }
+
         #add-product {
             position: absolute;
             right: 10px;
@@ -93,9 +100,11 @@
             height: 50px;
             cursor: pointer;
         }
+
         #product-dialog {
             width: 500px;
         }
+
         #info-bar button {
             position: absolute;
             font-size: 24px;
@@ -108,21 +117,26 @@
             height: 40px;
             cursor: pointer;
         }
+
         button.settings {
             right: 10px;
         }
+
         button.edit {
             left: 10px;
         }
+
         table {
             width: 100%;
             border-collapse: collapse;
         }
+
         th, td {
             padding: 6px;
             text-align: left;
             border-bottom: 1px solid #ddd;
         }
+
         .delete-button {
             background-color: #fee;
             color: white;
@@ -130,9 +144,11 @@
             border-radius: 4px;
             padding: 2px 6px;
         }
+
         #total-row {
             font-weight: bold;
         }
+
         dialog {
             border: 1px solid #0008;
             border-radius: 8px;
@@ -140,10 +156,12 @@
             background-color: #eee;
             box-shadow: 5px 5px 10px #0006;
         }
+
         dialog::backdrop {
             backdrop-filter: brightness(0.7);
             /*filter: blur(4px);*/
         }
+
         .header-row {
             width: 100%;
             padding: 0px;
@@ -151,27 +169,32 @@
             border: none;
             border-bottom: 1px #888 solid;
         }
+
         .header-row label {
             font-size: 20px;
             padding-left: 10px;
         }
+
         .input-row {
             width: 100%;
             padding: 0px;
             margin: 0px;
             border: none;
         }
+
         label {
             margin: 5px 0;
             padding: 5px;
             width: 30%;
             display: inline-block;
         }
+
         .input-row input[type="text"] {
             margin: 5px 0;
             padding: 5px;
             width: 65%;
         }
+
         .input-row input[type="radio"] {
             appearance: none;
             margin: 0px 4px 0px 0px;
@@ -181,37 +204,48 @@
             border-radius: 20%;
             box-shadow: 2px 2px 3px #666;
         }
+
         .input-row input[type="radio"]:checked {
             border: 2px solid #222;
             box-shadow: 1px 1px 1px #6668;
         }
+
         .green {
             background-color: var(--green);
         }
+
         .cyan {
             background-color: var(--cyan);
         }
+
         .blue {
             background-color: var(--blue);
         }
+
         .purple {
             background-color: var(--purple);
         }
+
         .red {
             background-color: var(--red);
         }
+
         .orange {
             background-color: var(--orange);
         }
+
         .yellow {
             background-color: var(--yellow);
         }
+
         .brown {
             background-color: var(--brown);
         }
+
         dialog button {
             margin-top: 10px;
         }
+
         button {
             padding: 8px 24px;
             font-size: 18px;
@@ -219,24 +253,29 @@
             border-radius: 8px;
             border-style: solid;
         }
+
         button:hover:not([disabled]) {
             filter: brightness(1.1);
         }
+
         button:disabled {
             opacity: 0.3;
             filter: saturate(50%);
             cursor: initial;
         }
+
         button.ok {
             background-color: #080;
             color: white;
             border-color: #060;
         }
+
         button.cancel {
             background-color: #ccc;
             color: #444;
             border-color: #888;
         }
+
         button.pay-button {
             font-size: 20px;
             margin-bottom: 10px;
@@ -250,22 +289,26 @@
             border-radius: 5px;
             border: none;
         }
+
         dialog.pay-dialog {
             background-color: #4CAF50;
             padding: 20px 30px;
         }
+
         div.pay-header {
             text-align: center;
             margin-bottom: 12px;
             font-size: 40px;
             color: white;
         }
+
         div.amount-small {
             font-size: 34px;
             color: white;
             margin-bottom: 10px;
             text-align: center;
         }
+
         div.pay-info {
             padding: 30px;
             background-color: white;
@@ -274,15 +317,13 @@
             display: flex;
             flex-direction: column;
         }
+
         div.pay-info span {
             font-size: 30px;
             font-weight: bold;
             width: 100%;
         }
-        div.pay-info span.amount-large {
-            font-size: 72px;
-            margin: 10px 0px;
-        }
+
         div.number {
             color: white;
             padding: 10px;
@@ -290,405 +331,453 @@
             width: 100%;
             text-align: center;
         }
+
         .hidden {
             opacity: 0;
         }
+
         .removed {
             display: none;
         }
     </style>
 </head>
 <body>
-    <div id="info-bar">
-        <button class="edit" id="edit-button">✏️</button>
-        <button class="settings" id="settings-button">⚙️</button>
-        <span class="header" id="title">Kassa</span>
-    </div>
-    <div id="product-panel">
-        <div id="products"></div>
-        <button id="add-product">+</button>
-    </div>
-    <div id="purchase-panel">
-        <table id="purchase-table">
-            <thead>
-                <tr>
-                    <th>Produkt</th>
-                    <th>Antal</th>
-                    <th>Pris</th>
-                    <th>Totalt</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody id="purchase-body">
-            </tbody>
-            <tfoot class="hidden" id="total">
-                <tr id="total-row">
-                    <td colspan="3">Totalt</td>
-                    <td id="total-sum">0</td>
-                    <td></td>
-                </tr>
-            </tfoot>
-        </table>
-        <button id="pay" class="pay-button" disabled>Betala</button>
-    </div>
+<div id="info-bar">
+    <button class="edit" id="edit-button">✏️</button>
+    <button class="settings" id="settings-button">⚙️</button>
+    <span class="header" id="title">Kassa</span>
+</div>
+<div id="product-panel">
+    <div id="products"></div>
+    <button id="add-product">+</button>
+</div>
+<div id="purchase-panel">
+    <table id="purchase-table">
+        <thead>
+        <tr>
+            <th>Produkt</th>
+            <th>Antal</th>
+            <th>Pris</th>
+            <th>Totalt</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody id="purchase-body">
+        </tbody>
+        <tfoot class="hidden" id="total">
+        <tr id="total-row">
+            <td colspan="3">Totalt</td>
+            <td id="total-sum">0</td>
+            <td></td>
+        </tr>
+        </tfoot>
+    </table>
+    <button id="pay" class="pay-button" disabled>Betala</button>
+</div>
 
-    <dialog id="product-dialog">
-        <form method="dialog">
-            <div class="input-row">
-                <label>Produktnamn:</label>
-                <input type="text" id="product-name">
-            </div>
-            <div class="input-row">
-                <label>Pris:</label>
-                <input type="text" id="product-price">
-            </div>
-            <div class="input-row">
-                <label>Färg:</label>
-                <input type="radio" name="color" value="green" class="green" checked="checked">
-                <input type="radio" name="color" value="cyan" class="cyan">
-                <input type="radio" name="color" value="blue" class="blue">
-                <input type="radio" name="color" value="purple" class="purple">
-                <input type="radio" name="color" value="red" class="red">
-                <input type="radio" name="color" value="orange" class="orange">
-                <input type="radio" name="color" value="yellow" class="yellow">
-                <input type="radio" name="color" value="brown" class="brown">
-            </div>
-            <button class="ok" id="create-product">Spara</button>
-            <button class="cancel" onclick="document.getElementById('product-dialog').close()">Avbryt</button>
-        </form>
-    </dialog>
+<dialog id="product-dialog">
+    <form method="dialog">
+        <div class="input-row">
+            <label>Produktnamn:</label>
+            <input type="text" id="product-name">
+        </div>
+        <div class="input-row">
+            <label>Pris:</label>
+            <input type="text" id="product-price">
+        </div>
+        <div class="input-row">
+            <label>Färg:</label>
+            <input type="radio" name="color" value="green" class="green" checked="checked">
+            <input type="radio" name="color" value="cyan" class="cyan">
+            <input type="radio" name="color" value="blue" class="blue">
+            <input type="radio" name="color" value="purple" class="purple">
+            <input type="radio" name="color" value="red" class="red">
+            <input type="radio" name="color" value="orange" class="orange">
+            <input type="radio" name="color" value="yellow" class="yellow">
+            <input type="radio" name="color" value="brown" class="brown">
+        </div>
+        <button class="ok" id="create-product">Spara</button>
+        <button class="cancel" onclick="document.getElementById('product-dialog').close()">Avbryt</button>
+    </form>
+</dialog>
 
-    <dialog id="settings-dialog">
-        <form method="dialog">
-            <div class="header-row">
-                <label>Allmänt</label>
-            </div>
-            <div class="input-row">
-                <label>Kassanamn:</label>
-                <input type="text" id="cashregister-name">
-            </div>
-            <div class="header-row">
-                <label>Swish</label>
-            </div>
-            <div class="input-row">
-                <label>Nummer:</label>
-                <input type="text" id="swish-number">
-            </div>
-            <div class="input-row">
-                <label>Meddelande:</label>
-                <input type="text" id="swish-message">
-            </div>
-            <button class="ok" id="save-settings">Spara</button>
-            <button class="cancel" onclick="document.getElementById('settings-dialog').close()">Avbryt</button>
-        </form>
-    </dialog>
+<dialog id="settings-dialog">
+    <form method="dialog">
+        <div class="header-row">
+            <label>Allmänt</label>
+        </div>
+        <div class="input-row">
+            <label>Kassanamn:</label>
+            <input type="text" id="cashregister-name">
+        </div>
+        <div class="header-row">
+            <label>Swish</label>
+        </div>
+        <div class="input-row">
+            <label>Nummer:</label>
+            <input type="text" id="swish-number">
+        </div>
+        <div class="input-row">
+            <label>Meddelande:</label>
+            <input type="text" id="swish-message">
+        </div>
+        <button class="ok" id="save-settings">Spara</button>
+        <button class="cancel" onclick="document.getElementById('settings-dialog').close()">Avbryt</button>
+    </form>
+</dialog>
 
-    <dialog class="pay-dialog" id="pay-dialog">
-        <div class="pay-header" id=pay-header></div>
-        <div class="amount-small" id="amount-small"></div>
-        <div class="pay-info" id=pay-info></div>
-        <div class="number" id="number"></div>
-        <button class="ok" id="purchase-done">Klar</button>
-        <button class="cancel" onclick="document.getElementById('pay-dialog').close()">Avbryt</button>
-    </dialog>
+<dialog class="pay-dialog" id="pay-dialog">
+    <div class="pay-header" id=pay-header></div>
+    <div class="amount-small" id="amount-small"></div>
+    <div class="pay-info" id=pay-info></div>
+    <div class="number" id="number"></div>
+    <button class="ok" id="purchase-done">Klar</button>
+    <button class="cancel" onclick="document.getElementById('pay-dialog').close()">Avbryt</button>
+</dialog>
 
-    <!-- Use the remote qrcode script for a true standalone one-file solution -->
-    <!--script
-        src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"
-        integrity="sha512-CNgIRecGo7nphbeZ04Sc13ka07paqdeTu0WR1IM4kNcpmBAUSHSQX0FslNhTDadL4O5SAGapGt4FodqL8My0mA=="
-        crossorigin="anonymous"
-        referrerpolicy="no-referrer">
-    </script-->
-    <script src="lib/qrcode.js"></script>
+<!-- Use the remote qrcode script for a true standalone one-file solution -->
+<!--script
+    src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"
+    integrity="sha512-CNgIRecGo7nphbeZ04Sc13ka07paqdeTu0WR1IM4kNcpmBAUSHSQX0FslNhTDadL4O5SAGapGt4FodqL8My0mA=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer">
+</script-->
+<script src="lib/qrcode.js"></script>
 
-    <script>
-        const EDIT_TIMEOUT = 1000
+<script>
+    const EDIT_TIMEOUT = 1000
 
-        const editBtn = document.getElementById('edit-button');
-        const settingsBtn = document.getElementById('settings-button');
-        const title = document.getElementById('title');
-        const productPanel = document.getElementById('products');
-        const addProductBtn = document.getElementById('add-product');
+    const utf8Encoder = new TextEncoder();
+    const utf8Decoder = new TextDecoder();
+    const colors = ["green", "cyan", "blue", "purple", "red", "orange", "yellow", "brown"]
 
-        const purchaseBody = document.getElementById('purchase-body');
-        const totalRow = document.getElementById('total');
-        const totalSum = document.getElementById('total-sum');
-        const payBtn = document.getElementById('pay');
-        
-        const qrDialog = document.getElementById('pay-dialog');
-        const payHeader = document.getElementById('pay-header');
-        const amountSmall = document.getElementById('amount-small');
-        const payInfo = document.getElementById('pay-info');
-        const numberOut = document.getElementById('number');
-        const purchaseDoneBtn = document.getElementById('purchase-done');
+    const Product = class {
+        constructor(name, price, color) {
+            this.name = name;
+            this.price = price;
+            this.color = color;
+        }
 
-        const productDialog = document.getElementById('product-dialog');
-        const productNameInput = document.getElementById('product-name');
-        const productPriceInput = document.getElementById('product-price');
-        const createProductBtn = document.getElementById('create-product');
+        brief() {
+            console.log(this)
+            return {n: this.name, p: this.price, c: colors.indexOf(this.color)}
+        }
 
-        const settingsDialog = document.getElementById('settings-dialog');
-        const titleInput = document.getElementById('cashregister-name');
-        const swishNumberInput = document.getElementById('swish-number');
-        const swishMessageInput = document.getElementById('swish-message');
-        const saveSettingsBtn = document.getElementById('save-settings');
+        static from(obj) {
+            console.log(obj)
+            return new Product(obj.n, obj.p, colors[obj.c] || "green");
+        }
+    }
 
-        var editTimer;
-        var productUnderEdit;
+    const editBtn = document.getElementById('edit-button');
+    const settingsBtn = document.getElementById('settings-button');
+    const title = document.getElementById('title');
+    const productPanel = document.getElementById('products');
+    const addProductBtn = document.getElementById('add-product');
 
-        var products = JSON.parse(localStorage.getItem("products") || "[]");
-        var settings = JSON.parse(localStorage.getItem("settings") || "{}");
+    const purchaseBody = document.getElementById('purchase-body');
+    const totalRow = document.getElementById('total');
+    const totalSum = document.getElementById('total-sum');
+    const payBtn = document.getElementById('pay');
 
-        var purchase = {};
-        setTitle();
-        renderProducts();
+    const qrDialog = document.getElementById('pay-dialog');
+    const payHeader = document.getElementById('pay-header');
+    const amountSmall = document.getElementById('amount-small');
+    const payInfo = document.getElementById('pay-info');
+    const numberOut = document.getElementById('number');
+    const purchaseDoneBtn = document.getElementById('purchase-done');
 
-        document.addEventListener("keydown", (e) => {
-            const keyName = e.key;
-            switch (keyName) {
+    const productDialog = document.getElementById('product-dialog');
+    const productNameInput = document.getElementById('product-name');
+    const productPriceInput = document.getElementById('product-price');
+    const createProductBtn = document.getElementById('create-product');
+
+    const settingsDialog = document.getElementById('settings-dialog');
+    const titleInput = document.getElementById('cashregister-name');
+    const swishNumberInput = document.getElementById('swish-number');
+    const swishMessageInput = document.getElementById('swish-message');
+    const saveSettingsBtn = document.getElementById('save-settings');
+
+    let editTimer;
+    let productUnderEdit;
+
+    let data = base64ToObject(localStorage.getItem("data") || btoa('{"p": [], "s": {}}'));
+    let products = data.p.map(Product.from)
+    let settings = data.s;
+    console.log("products: " + JSON.stringify(products))
+    console.log("settings: " + JSON.stringify(settings))
+
+    let purchase = {};
+    setTitle();
+    renderProducts();
+
+    document.addEventListener("keydown", (e) => {
+        const keyName = e.key;
+        switch (keyName) {
             case '+':
                 showProductDialog();
                 e.preventDefault();
                 break;
-            }
-        });
-
-        function findProduct(name) {
-            for (const prod of products) {
-                if (prod.name.toLowerCase() === name.toLowerCase()) {
-                    return prod
-                }
-            }
-            return null;
         }
+    });
 
-        function showProductDialog() {
-            productNameInput.value = '';
-            productPriceInput.value = '';
-            document.querySelector(`input.green`).checked=true      
-            productDialog.showModal();
-        }
+    function objectToBase64(str) {
+        const bytes = utf8Encoder.encode(JSON.stringify(str))
+        const binString = String.fromCharCode(...bytes);
+        return btoa(binString);
+    }
 
-        function editProduct(name) {
-            editTimer = null
-            productUnderEdit = findProduct(name)
-            productNameInput.value = productUnderEdit.name;
-            productPriceInput.value = productUnderEdit.price;
-            let color=productUnderEdit.color || 'green'
-            document.querySelector(`input.${color}`).checked=true
-            productDialog.showModal();            
-        }
+    function base64ToObject(base64) {
+        console.log(base64)
+        const bytes = Uint8Array.fromBase64(base64);
+        console.log(utf8Decoder.decode(bytes))
+        return JSON.parse(utf8Decoder.decode(bytes))
+    }
 
-        function showSettingsDialog() {
-            titleInput.value = settings.title || '';
-            swishNumberInput.value = settings.swishNumber || '';
-            swishMessageInput.value = settings.swishMessage || '';
-            settingsDialog.showModal();
-        }
-
-        addProductBtn.addEventListener('click', () => {
-            productUnderEdit = null
-            showProductDialog();
-            validateProductInput()
-        });
-
-        settingsBtn.addEventListener('click', () => {
-            showSettingsDialog();
-        });
-
-        function validateProductInput() {
-            const nameOk = productNameInput.value.trim().length > 0
-            const priceOk = productPriceInput.value.trim().length > 0
-            if (nameOk && priceOk) {
-                createProductBtn.removeAttribute("disabled");
-            } else {
-                createProductBtn.setAttribute("disabled", "disabled");
+    function findProduct(name) {
+        for (const prod of products) {
+            if (prod.name.toLowerCase() === name.toLowerCase()) {
+                return prod
             }
         }
+        return null;
+    }
 
-        productNameInput.addEventListener('input', validateProductInput)
-        productPriceInput.addEventListener('input', validateProductInput)
+    function showProductDialog() {
+        productNameInput.value = '';
+        productPriceInput.value = '';
+        document.querySelector(`input.green`).checked = true
+        productDialog.showModal();
+    }
 
-        createProductBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            const name = productNameInput.value.trim();
-            const price = parseFloat(productPriceInput.value);
-            const color = document.querySelector('input[name="color"]:checked').value
-            if (name && !isNaN(price)) {
-                let existing = productUnderEdit || findProduct(name)
-                if (existing) {
-                    if (price > 0) {
-                        existing.name = name;
-                        existing.price = price;
-                        existing.color = color;
-                    } else {
-                        products = products.filter(function(p) {
-                            return p.name !== existing.name
-                        });
-                    }
+    function editProduct(name) {
+        editTimer = null
+        productUnderEdit = findProduct(name)
+        productNameInput.value = productUnderEdit.name;
+        productPriceInput.value = productUnderEdit.price;
+        let color = productUnderEdit.color || 'green'
+        document.querySelector(`input.${color}`).checked = true
+        productDialog.showModal();
+    }
+
+    function showSettingsDialog() {
+        titleInput.value = settings.title || '';
+        swishNumberInput.value = settings.swishNumber || '';
+        swishMessageInput.value = settings.swishMessage || '';
+        settingsDialog.showModal();
+    }
+
+    addProductBtn.addEventListener('click', () => {
+        productUnderEdit = null
+        showProductDialog();
+        validateProductInput()
+    });
+
+    settingsBtn.addEventListener('click', () => {
+        showSettingsDialog();
+    });
+
+    function validateProductInput() {
+        const nameOk = productNameInput.value.trim().length > 0
+        const priceOk = productPriceInput.value.trim().length > 0
+        if (nameOk && priceOk) {
+            createProductBtn.removeAttribute("disabled");
+        } else {
+            createProductBtn.setAttribute("disabled", "disabled");
+        }
+    }
+
+    productNameInput.addEventListener('input', validateProductInput)
+    productPriceInput.addEventListener('input', validateProductInput)
+
+    function saveState() {
+        data = {
+            p: products.map(p => p.brief()),
+            s: settings
+        }
+        localStorage.setItem("data", objectToBase64(data));
+    }
+
+    createProductBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const name = productNameInput.value.trim();
+        const price = parseFloat(productPriceInput.value);
+        const color = document.querySelector('input[name="color"]:checked').value
+        if (name && !isNaN(price)) {
+            let existing = productUnderEdit || findProduct(name)
+            if (existing) {
+                if (price > 0) {
+                    existing.name = name;
+                    existing.price = price;
+                    existing.color = color;
                 } else {
-                    products.push({name: name, price: price, color: color});
+                    products = products.filter(function (p) {
+                        return p.name !== existing.name
+                    });
                 }
-                localStorage.setItem("products", JSON.stringify(products));
-                renderProducts();
-                productDialog.close();
-            }
-        });
-
-        saveSettingsBtn.addEventListener('click', (e) => {
-            settings.title = titleInput.value.trim();
-            settings.swishNumber = validSwishNumber(swishNumberInput.value.trim());
-            settings.swishMessage = swishMessageInput.value.trim();
-            setTitle();
-            localStorage.setItem("settings", JSON.stringify(settings));
-        });
-
-        function setTitle() {
-            if (settings.title) {
-                const titleValue = "Kassa – " + settings.title
-                document.title = titleValue;
-                title.textContent = titleValue;
             } else {
-                document.title = "Kassan";
-                title.textContent = "Kassan";
+                products.push(new Product(name, price, color));
             }
+            saveState()
+            renderProducts();
+            productDialog.close();
         }
+    });
 
-        function validSwishNumber(number) {
-            number = number.replace(/\D/g, "");
-            if (number.length != 10) {
-                number = ""
-            }
-            return number;
+    saveSettingsBtn.addEventListener('click', (e) => {
+        settings.title = titleInput.value.trim();
+        settings.swishNumber = validSwishNumber(swishNumberInput.value.trim());
+        settings.swishMessage = swishMessageInput.value.trim();
+        setTitle();
+        saveState()
+    });
+
+    function setTitle() {
+        if (settings.title) {
+            const titleValue = "Kassa – " + settings.title
+            document.title = titleValue;
+            title.textContent = titleValue;
+        } else {
+            document.title = "Kassan";
+            title.textContent = "Kassan";
         }
+    }
 
-        function formatSwishNumber() {
-            number = settings.swishNumber;
-            if (number && number.length == 10) {
-                number=number.substring(0,3) + "-"
-                    + number.substring(3,6) + " "
-                    + number.substring(6,8) + " "
-                    + number.substring(8);
-            }
-            return number;
+    function validSwishNumber(number) {
+        number = number.replace(/\D/g, "");
+        if (number.length != 10) {
+            number = ""
         }
+        return number;
+    }
 
-        purchaseDoneBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            purchase = {};
-            renderPurchase();
-            qrDialog.close();
-        });
+    function formatSwishNumber() {
+        number = settings.swishNumber;
+        if (number && number.length == 10) {
+            number = number.substring(0, 3) + "-"
+                + number.substring(3, 6) + " "
+                + number.substring(6, 8) + " "
+                + number.substring(8);
+        }
+        return number;
+    }
 
-        payBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            const amount = totalPrice();
-            qrDialog.showModal();
-            payHeader.textContent=`${settings.title || ''}`;
-            payInfo.innerHTML = '';
-            if (settings.swishNumber) {
-                amountSmall.classList.remove("removed");
-                amountSmall.textContent=`${amount} kr`;
-                const message = encodeURIComponent(settings.swishMessage)
-                const url = `https://app.swish.nu/1/p/sw/?sw=${settings.swishNumber}&amt=${amount}&cur=SEK&msg=${message}&src=qr`
-                new QRCode(payInfo, {
-                    text: url,
-                    width: 320,
-                    height: 320,
-                    colorDark : "#000000",
-                    colorLight : "#ffffff",
-                    correctLevel : QRCode.CorrectLevel.L
-                });
-                numberOut.textContent = formatSwishNumber();
-            } else {
-                amountSmall.classList.add("removed");
-                payInfo.innerHTML=`<span>Att betala</span>
+    purchaseDoneBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        purchase = {};
+        renderPurchase();
+        qrDialog.close();
+    });
+
+    payBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const amount = totalPrice();
+        qrDialog.showModal();
+        payHeader.textContent = `${settings.title || ''}`;
+        payInfo.innerHTML = '';
+        if (settings.swishNumber) {
+            amountSmall.classList.remove("removed");
+            amountSmall.textContent = `${amount} kr`;
+            const message = encodeURIComponent(settings.swishMessage)
+            const url = `https://app.swish.nu/1/p/sw/?sw=${settings.swishNumber}&amt=${amount}&cur=SEK&msg=${message}&src=qr`
+            new QRCode(payInfo, {
+                text: url,
+                width: 320,
+                height: 320,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.L
+            });
+            numberOut.textContent = formatSwishNumber();
+        } else {
+            amountSmall.classList.add("removed");
+            payInfo.innerHTML = `<span>Att betala</span>
                 <span class="amount-large">${amount} kr</span>`
-            }
-        });
-
-        function addToPurchase(name, price) {
-            if (editTimer) {
-                clearTimeout(editTimer)
-                editTimer = null
-                if (purchase[name]) {
-                    purchase[name].quantity += 1;
-                } else {
-                    purchase[name] = { price: price, quantity: 1 };
-                }
-                renderPurchase();
-            }
         }
+    });
 
-        function renderPurchase() {
-            purchaseBody.innerHTML = '';
-            let total = 0;
-            for (const [name, data] of Object.entries(purchase)) {
-                const row = document.createElement('tr');
-                const totalPrice = data.price * data.quantity;
-                total += totalPrice;
+    function addToPurchase(name, price) {
+        if (editTimer) {
+            clearTimeout(editTimer)
+            editTimer = null
+            if (purchase[name]) {
+                purchase[name].quantity += 1;
+            } else {
+                purchase[name] = {price: price, quantity: 1};
+            }
+            renderPurchase();
+        }
+    }
 
-                row.innerHTML = `
+    function renderPurchase() {
+        purchaseBody.innerHTML = '';
+        let total = 0;
+        for (const [name, data] of Object.entries(purchase)) {
+            const row = document.createElement('tr');
+            const totalPrice = data.price * data.quantity;
+            total += totalPrice;
+
+            row.innerHTML = `
                     <td>${name}</td>
                     <td>${data.quantity}</td>
                     <td>${data.price.toFixed(2)}</td>
                     <td>${totalPrice.toFixed(2)}</td>
                     <td><button class="delete-button" onclick="deleteProduct('${name}')">🗑️</button></td>
                 `;
-                purchaseBody.appendChild(row);
-            }
-            totalSum.textContent = total.toFixed(2);
-            if (Object.keys(purchase).length === 0) {
-                payBtn.setAttribute("disabled", "disabled");
-                totalRow.classList.add('hidden');
-            } else {
-                payBtn.removeAttribute("disabled");
-                totalRow.classList.remove('hidden');
-            }
+            purchaseBody.appendChild(row);
         }
+        totalSum.textContent = total.toFixed(2);
+        if (Object.keys(purchase).length === 0) {
+            payBtn.setAttribute("disabled", "disabled");
+            totalRow.classList.add('hidden');
+        } else {
+            payBtn.removeAttribute("disabled");
+            totalRow.classList.remove('hidden');
+        }
+    }
 
-        function startEditTimer(name) {
-            if (editTimer) {
-                clearTimeout(editTimer)
-            }
-            editTimer = setTimeout(() => editProduct(name), EDIT_TIMEOUT)
+    function startEditTimer(name) {
+        if (editTimer) {
+            clearTimeout(editTimer)
         }
+        editTimer = setTimeout(() => editProduct(name), EDIT_TIMEOUT)
+    }
 
-        function renderProducts() {
-           // const btn = document.createElement('button')
-            productPanel.innerHTML =  '';
-            for (const product of products) {
-                const name = product.name
-                const price = product.price
-                const color = product.color || 'green'
-                let priceStr = price
-                if (price % 1 != 0) {
-                    priceStr = price.toFixed(2)
-                }
-                const btn = document.createElement('button');
-                btn.className = `product-button ${color}`;
-                btn.textContent = name + ', ' + priceStr + 'kr';
-                btn.dataset.name = name;
-                btn.dataset.price = price;
-                btn.addEventListener('mousedown', () => startEditTimer(name));
-                btn.addEventListener('click', () => addToPurchase(name, price));
-                productPanel.appendChild(btn);
+    function renderProducts() {
+        // const btn = document.createElement('button')
+        productPanel.innerHTML = '';
+        for (const product of products) {
+            const name = product.name
+            const price = product.price
+            const color = product.color || 'green'
+            let priceStr = price
+            if (price % 1 !== 0) {
+                priceStr = price.toFixed(2)
             }
+            const btn = document.createElement('button');
+            btn.className = `product-button ${color}`;
+            btn.textContent = name + ', ' + priceStr + 'kr';
+            btn.dataset.name = name;
+            btn.dataset.price = price;
+            btn.addEventListener('mousedown', () => startEditTimer(name));
+            btn.addEventListener('click', () => addToPurchase(name, price));
+            productPanel.appendChild(btn);
         }
+    }
 
-        function totalPrice() {
-            let total = 0;
-            for (const [name, data] of Object.entries(purchase)) {
-                const totalPrice = data.price * data.quantity;
-                total += totalPrice;
-            }
-            return total.toFixed(2);
+    function totalPrice() {
+        let total = 0;
+        for (const [name, data] of Object.entries(purchase)) {
+            const totalPrice = data.price * data.quantity;
+            total += totalPrice;
         }
+        return total.toFixed(2);
+    }
 
-        function deleteProduct(name) {
-            delete purchase[name];
-            renderPurchase();
-        }
-    </script>
+    function deleteProduct(name) {
+        delete purchase[name];
+        renderPurchase();
+    }
+</script>
 </body>
 </html>
