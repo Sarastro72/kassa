@@ -11,6 +11,10 @@ while getopts "pt:" opt; do
       ;;
     \?)
       echo "Invalid option: -$OPTARG"
+      echo "usage: deploy.sh [-p] [-t <tagname>]"
+      echo " -p push to ducker hub"
+      echo " -t set tagname (default 'test')"
+      exit
       ;;
   esac
 done

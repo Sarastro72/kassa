@@ -82,7 +82,11 @@
             border: none;
             cursor: pointer;
             border-radius: 8px;
-            text-shadow: 0px 0px 2px #000;
+            text-shadow: 1px 1px 2px #000;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            touch-action: manipulation;
         }
 
         #add-product {
@@ -499,6 +503,7 @@
     const saveSettingsBtn = document.getElementById('save-settings');
 
     let editTimer;
+    let longPressFired = false;
     let productUnderEdit;
 
     let data = base64ToObject(localStorage.getItem("data") || btoa('{"p": [], "s": {}}'));
@@ -697,16 +702,17 @@
     });
 
     function addToPurchase(name, price) {
-        if (editTimer) {
-            clearTimeout(editTimer)
-            editTimer = null
-            if (purchase[name]) {
-                purchase[name].quantity += 1;
-            } else {
-                purchase[name] = {price: price, quantity: 1};
-            }
-            renderPurchase();
+        if (longPressFired) {
+            // long press already opened the edit dialog for this press
+            return;
         }
+        cancelEditTimer();
+        if (purchase[name]) {
+            purchase[name].quantity += 1;
+        } else {
+            purchase[name] = {price: price, quantity: 1};
+        }
+        renderPurchase();
     }
 
     function renderPurchase() {
@@ -737,10 +743,22 @@
     }
 
     function startEditTimer(name) {
+        cancelEditTimer();
+        longPressFired = false;
+        editTimer = setTimeout(
+            () => {
+                longPressFired = true;
+                editProduct(name);
+            },
+            EDIT_TIMEOUT
+        )
+    }
+
+    function cancelEditTimer() {
         if (editTimer) {
             clearTimeout(editTimer)
+            editTimer = null
         }
-        editTimer = setTimeout(() => editProduct(name), EDIT_TIMEOUT)
     }
 
     function renderProducts() {
@@ -759,7 +777,10 @@
             btn.textContent = name + ', ' + priceStr + 'kr';
             btn.dataset.name = name;
             btn.dataset.price = price;
-            btn.addEventListener('mousedown', () => startEditTimer(name));
+            btn.addEventListener('pointerdown', () => startEditTimer(name));
+            btn.addEventListener('pointercancel', cancelEditTimer);
+            btn.addEventListener('pointerleave', cancelEditTimer);
+            btn.addEventListener('contextmenu', e => e.preventDefault());
             btn.addEventListener('click', () => addToPurchase(name, price));
             productPanel.appendChild(btn);
         }

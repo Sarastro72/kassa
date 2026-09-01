@@ -2,6 +2,7 @@ services:
     app:
         container_name: kassa
         image: sarastro72/kassa:test
+        pull_policy: build
         build:
             context: .
             dockerfile: Dockerfile
