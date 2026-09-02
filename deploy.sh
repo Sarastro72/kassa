@@ -1,13 +1,19 @@
+/bin/bash -e
+
 tag=test
 push=false
+setup_env=false
 
-while getopts "pt:" opt; do
+while getopts "pt:e" opt; do
   case $opt in
     p)
       push=true
       ;;
     t)
       tag=$OPTARG
+      ;;
+    e)
+      setup_env=true
       ;;
     \?)
       echo "Invalid option: -$OPTARG"
@@ -20,9 +26,12 @@ while getopts "pt:" opt; do
 done
 
 if $push; then
-    docker buildx build --platform linux/amd64,linux/arm64 -t sarastro72/kassa:$tag --push .
-    echo "Deployed sarastro72/kassa:$tag to docker hub"
+  if $setup_env; then
+    docker buildx create  --name container-builder --driver docker-container --bootstrap --use
+  fi
+  docker buildx build --platform linux/amd64,linux/arm64 -t sarastro72/kassa:$tag --push .
+  echo "Deployed sarastro72/kassa:$tag to docker hub"
 else
-    docker build -t sarastro72/kassa:$tag . && \
-    echo "Built sarastro72/kassa:$tag"
+  docker build -t sarastro72/kassa:$tag . && \
+  echo "Built sarastro72/kassa:$tag"
 fi

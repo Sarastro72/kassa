@@ -460,6 +460,7 @@
         <button class="ok" id="save-settings">Spara</button>
         <button class="cancel" onclick="document.getElementById('settings-dialog').close()">Avbryt</button>
         <button class="share" id="share-button" type="button">Dela</button>
+        <button class="share" id="pair-button" type="button">Parkoppla skärm</button>
     </form>
 </dialog>
 
@@ -470,6 +471,15 @@
     <div class="share-status" id="share-status"></div>
     <button class="ok" id="copy-share-url">Kopiera länk</button>
     <button class="cancel" onclick="document.getElementById('share-dialog').close()">Klar</button>
+</dialog>
+
+<dialog class="share-dialog" id="pair-dialog">
+    <div class="pay-header">Parkoppla skärm</div>
+    <div class="pay-info" id="pair-qr"></div>
+    <div class="share-url" id="pair-url"></div>
+    <div class="share-status" id="pair-status"></div>
+    <button class="cancel" onclick="document.getElementById('pair-dialog').close()">Klar</button>
+    <button class="share" id="unpair-button" type="button">Koppla från</button>
 </dialog>
 
 <dialog class="pay-dialog" id="pay-dialog">
@@ -494,6 +504,7 @@
     const EDIT_TIMEOUT = 1000
     const DATA_PARAM = 'data'
     const EMPTY_DATA = '{"p": [], "s": {}}'
+    const PAIR_KEY = 'pair'
 
     const utf8Encoder = new TextEncoder();
     const utf8Decoder = new TextDecoder();
@@ -552,6 +563,13 @@
     const shareUrlOut = document.getElementById('share-url');
     const shareStatus = document.getElementById('share-status');
     const copyShareUrlBtn = document.getElementById('copy-share-url');
+
+    const pairBtn = document.getElementById('pair-button');
+    const pairDialog = document.getElementById('pair-dialog');
+    const pairQr = document.getElementById('pair-qr');
+    const pairUrlOut = document.getElementById('pair-url');
+    const pairStatus = document.getElementById('pair-status');
+    const unpairBtn = document.getElementById('unpair-button');
 
     let editTimer;
     let longPressFired = false;
@@ -642,6 +660,67 @@
         }
         localStorage.setItem("data", objectToBase64(imported));
         return imported;
+    }
+
+    // Kept under its own localStorage key, never inside "data", so the share
+    // link (?data=…) cannot clone the pairing to another register.
+    function pairing() {
+        const stored = localStorage.getItem(PAIR_KEY);
+        if (!stored) {
+            return null;
+        }
+        try {
+            return JSON.parse(stored);
+        } catch (e) {
+            console.error("Kunde inte läsa parkopplingen", e);
+            return null;
+        }
+    }
+
+    function createPairing() {
+        // crypto.randomUUID is secure-context only and therefore missing on http://<ip>:5555
+        const pair = {id: randomHex(), key: randomHex()};
+        localStorage.setItem(PAIR_KEY, JSON.stringify(pair));
+        return pair;
+    }
+
+    function randomHex() {
+        const bytes = crypto.getRandomValues(new Uint8Array(16));
+        return Array.from(bytes)
+            .map(b => b.toString(16).padStart(2, '0'))
+            .join('');
+    }
+
+    function displayUrl(pair) {
+        const url = new URL(window.location.href);
+        url.search = '';
+        url.hash = '';
+        return `${url.origin}/display?s=${pair.id}`;
+    }
+
+    function payState(mode) {
+        const state = {mode: mode, title: settings.title || ''};
+        if (mode === 'pay') {
+            state.amount = totalPrice();
+            if (settings.swishNumber) {
+                state.swishUrl = swishUrl(state.amount);
+            }
+        }
+        return state;
+    }
+
+    // fire and forget, the pay dialog must never wait for the network
+    function publishState(mode) {
+        const pair = pairing();
+        if (!pair) {
+            return;
+        }
+        fetch(`/api/s/${pair.id}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-Kassa-Key': pair.key},
+            body: JSON.stringify(payState(mode)),
+            keepalive: true
+        }).catch(e => console.error("Kunde inte uppdatera kundskärmen", e));
     }
 
     function shareUrl() {
@@ -751,6 +830,38 @@
         }
     });
 
+    pairBtn.addEventListener('click', () => {
+        showPairDialog();
+    });
+
+    function showPairDialog() {
+        const pair = pairing() || createPairing();
+        const url = displayUrl(pair);
+        pairUrlOut.textContent = url;
+        pairStatus.textContent = '';
+        pairQr.innerHTML = '';
+        try {
+            new QRCode(pairQr, {
+                text: url,
+                width: 320,
+                height: 320,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.L
+            });
+        } catch (e) {
+            console.error("Kunde inte skapa QR-kod", e);
+            pairQr.innerHTML = '<span>Kunde inte skapa QR-kod – använd länken</span>';
+        }
+        pairDialog.showModal();
+        publishState('idle');
+    }
+
+    unpairBtn.addEventListener('click', () => {
+        localStorage.removeItem(PAIR_KEY);
+        pairDialog.close();
+    });
+
     function validateProductInput() {
         const nameOk = productNameInput.value.trim().length > 0
         const priceOk = productPriceInput.value.trim().length > 0
@@ -808,6 +919,7 @@
         settings.swishMessage = swishMessageInput.value.trim();
         setTitle();
         saveState()
+        publishState('idle');
     });
 
     function setTitle() {
@@ -829,6 +941,11 @@
         return number;
     }
 
+    function swishUrl(amount) {
+        const message = encodeURIComponent(settings.swishMessage)
+        return `https://app.swish.nu/1/p/sw/?sw=${settings.swishNumber}&amt=${amount}&cur=SEK&msg=${message}&src=qr`
+    }
+
     function formatSwishNumber() {
         number = settings.swishNumber;
         if (number && number.length == 10) {
@@ -840,6 +957,8 @@
         return number;
     }
 
+    qrDialog.addEventListener('close', () => publishState('idle'));
+
     purchaseDoneBtn.addEventListener('click', (e) => {
         e.preventDefault();
         purchase = {};
@@ -850,14 +969,14 @@
     payBtn.addEventListener('click', (e) => {
         e.preventDefault();
         const amount = totalPrice();
+        publishState('pay');
         qrDialog.showModal();
         payHeader.textContent = `${settings.title || ''}`;
         payInfo.innerHTML = '';
         if (settings.swishNumber) {
             amountSmall.classList.remove("removed");
             amountSmall.textContent = `${amount} kr`;
-            const message = encodeURIComponent(settings.swishMessage)
-            const url = `https://app.swish.nu/1/p/sw/?sw=${settings.swishNumber}&amt=${amount}&cur=SEK&msg=${message}&src=qr`
+            const url = swishUrl(amount);
             new QRCode(payInfo, {
                 text: url,
                 width: 320,

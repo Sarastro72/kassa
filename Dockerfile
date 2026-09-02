@@ -1,7 +1,11 @@
-FROM nginx:alpine
+FROM node:22-alpine
 
-WORKDIR /usr/share/nginx
+WORKDIR /app
 
-COPY kassasystem.html html/index.html
-COPY lib/ html/lib/
-COPY static/ html/static/
+COPY server.js kassasystem.html display.html ./
+COPY lib/ lib/
+COPY static/ static/
+
+EXPOSE 8080
+
+CMD ["node", "server.js"]

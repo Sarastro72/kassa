@@ -1,0 +1,14 @@
+{
+    "name": "Kassan kundskärm",
+    "short_name": "Kundskärm",
+    "display": "fullscreen",
+    "background_color": "#111111",
+    "theme_color": "#111111",
+    "icons": [
+        {
+            "src": "/static/cash-register.png",
+            "sizes": "190x190",
+            "type": "image/png"
+        }
+    ]
+}

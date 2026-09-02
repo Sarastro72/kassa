@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <link rel="icon" type="image/png" href="static/cash-register.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Kundskärm">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#111111">
+    <link rel="apple-touch-icon" href="static/cash-register.png">
+    <link rel="manifest" href="static/manifest.webmanifest">
+    <title>Kundskärm</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            background-color: #111;
+            color: white;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            padding: 20px;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #title {
+            font-size: 40px;
+            text-align: center;
+        }
+
+        #amount {
+            font-size: 56px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        #qr {
+            background-color: white;
+            border-radius: 10px;
+            padding: 16px;
+        }
+
+        #qr canvas, #qr img {
+            display: block;
+            width: min(58vh, 80vw, 320px);
+            height: auto;
+            image-rendering: pixelated;
+        }
+
+        #message {
+            font-size: 22px;
+            color: #999;
+            text-align: center;
+        }
+
+        #status {
+            position: fixed;
+            bottom: 8px;
+            font-size: 14px;
+            color: #e0a030;
+        }
+
+        #hint {
+            position: fixed;
+            top: 8px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* must stay in the layout for iOS to keep playing it, so hide it by size */
+        #nosleep {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .removed {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div id="title"></div>
+<div id="amount" class="removed"></div>
+<div id="qr" class="removed"></div>
+<div id="message"></div>
+<div id="status"></div>
+<div id="hint" class="removed">Tryck för helskärm</div>
+<video id="nosleep" muted playsinline loop preload="auto"
+       src="data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAMrbW9vdgAAAGxtdmhkAAAAAAAAAAAAAAAAAAAD6AAAB9AAAQAAAQAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAlV0cmFrAAAAXHRraGQAAAADAAAAAAAAAAAAAAABAAAAAAAAB9AAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAABAAAAAQAAAAAAAkZWR0cwAAABxlbHN0AAAAAAAAAAEAAAfQAAAAAAABAAAAAAHNbWRpYQAAACBtZGhkAAAAAAAAAAAAAAAAAABAAAAAgABVxAAAAAAALWhkbHIAAAAAAAAAAHZpZGUAAAAAAAAAAAAAAABWaWRlb0hhbmRsZXIAAAABeG1pbmYAAAAUdm1oZAAAAAEAAAAAAAAAAAAAACRkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAx1cmwgAAAAAQAAAThzdGJsAAAAuHN0c2QAAAAAAAAAAQAAAKhhdmMxAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAABAAEABIAAAASAAAAAAAAAABFUxhdmM2Mi4yOC4xMDIgbGlieDI2NAAAAAAAAAAAAAAAGP//AAAALmF2Y0MBQsAe/+EAFmdCwB7ZHsBEAAADAAQAAAMACDxYuSABAAVoy4PLIAAAABBwYXNwAAAAAQAAAAEAAAAUYnRydAAAAAAAAApAAAAAAAAAABhzdHRzAAAAAAAAAAEAAAACAABAAAAAABRzdHNzAAAAAAAAAAEAAAABAAAAHHN0c2MAAAAAAAAAAQAAAAEAAAACAAAAAQAAABxzdHN6AAAAAAAAAAAAAAACAAAChgAAAAoAAAAUc3RjbwAAAAAAAAABAAADWwAAAGJ1ZHRhAAAAWm1ldGEAAAAAAAAAIWhkbHIAAAAAAAAAAG1kaXJhcHBsAAAAAAAAAAAAAAAALWlsc3QAAAAlqXRvbwAAAB1kYXRhAAAAAQAAAABMYXZmNjIuMTIuMTAyAAAACGZyZWUAAAKYbWRhdAAAAnAGBf//bNxF6b3m2Ui3lizYINkj7u94MjY0IC0gY29yZSAxNjUgcjMyMjIgYjM1NjA1YSAtIEguMjY0L01QRUctNCBBVkMgY29kZWMgLSBDb3B5bGVmdCAyMDAzLTIwMjUgLSBodHRwOi8vd3d3LnZpZGVvbGFuLm9yZy94MjY0Lmh0bWwgLSBvcHRpb25zOiBjYWJhYz0wIHJlZj0zIGRlYmxvY2s9MTowOjAgYW5hbHlzZT0weDE6MHgxMTEgbWU9aGV4IHN1Ym1lPTcgcHN5PTEgcHN5X3JkPTEuMDA6MC4wMCBtaXhlZF9yZWY9MSBtZV9yYW5nZT0xNiBjaHJvbWFfbWU9MSB0cmVsbGlzPTEgOHg4ZGN0PTAgY3FtPTAgZGVhZHpvbmU9MjEsMTEgZmFzdF9wc2tpcD0xIGNocm9tYV9xcF9vZmZzZXQ9LTIgdGhyZWFkcz0xIGxvb2thaGVhZF90aHJlYWRzPTEgc2xpY2VkX3RocmVhZHM9MCBucj0wIGRlY2ltYXRlPTEgaW50ZXJsYWNlZD0wIGJsdXJheV9jb21wYXQ9MCBjb25zdHJhaW5lZF9pbnRyYT0wIGJmcmFtZXM9MCB3ZWlnaHRwPTAga2V5aW50PTI1MCBrZXlpbnRfbWluPTEgc2NlbmVjdXQ9NDAgaW50cmFfcmVmcmVzaD0wIHJjX2xvb2thaGVhZD00MCByYz1jcmYgbWJ0cmVlPTEgY3JmPTIzLjAgcWNvbXA9MC42MCBxcG1pbj0wIHFwbWF4PTY5IHFwc3RlcD00IGlwX3JhdGlvPTEuNDAgYXE9MToxLjAwAIAAAAAOZYiEBb///w9FAAFPf4AAAAAGQZo4CvqA"></video>
+
+<script src="lib/qrcode.js"></script>
+
+<script>
+    const SESSION_KEY = 'pairSession'
+    const SESSION_PARAM = 's'
+    const HEX_ID = /^[0-9a-f]{8,64}$/
+
+    const titleOut = document.getElementById('title');
+    const amountOut = document.getElementById('amount');
+    const qrOut = document.getElementById('qr');
+    const messageOut = document.getElementById('message');
+    const statusOut = document.getElementById('status');
+    const hintOut = document.getElementById('hint');
+    const nosleepVideo = document.getElementById('nosleep');
+
+    let renderedQrUrl = null;
+
+    const sessionId = resolveSession();
+    if (sessionId) {
+        messageOut.textContent = 'Väntar på kassan…';
+        connect(sessionId);
+        keepAwake();
+    } else {
+        messageOut.textContent = 'Skanna parkopplings-QR i kassan';
+    }
+
+    function resolveSession() {
+        const param = new URLSearchParams(window.location.search).get(SESSION_PARAM);
+        if (param && HEX_ID.test(param)) {
+            // deliberately left in the address bar: a home screen shortcut then
+            // carries the id, which localStorage alone cannot guarantee on iOS
+            localStorage.setItem(SESSION_KEY, param);
+            return param;
+        }
+        return localStorage.getItem(SESSION_KEY);
+    }
+
+    function connect(id) {
+        // EventSource reconnects on its own, no retry loop needed here
+        const source = new EventSource(`/api/s/${id}`);
+        source.addEventListener('open', () => statusOut.textContent = '');
+        source.addEventListener('error', () => statusOut.textContent = 'Återansluter…');
+        source.addEventListener('message', (e) => {
+            statusOut.textContent = '';
+            try {
+                render(JSON.parse(e.data));
+            } catch (err) {
+                console.error("Kunde inte tolka state", err);
+            }
+        });
+    }
+
+    function render(state) {
+        const paying = state.mode === 'pay';
+        titleOut.textContent = state.title || 'Kassan';
+        messageOut.textContent = '';
+        amountOut.textContent = paying ? `${state.amount} kr` : '';
+        amountOut.classList.toggle('removed', !paying);
+        renderQr(paying ? state.swishUrl : null);
+    }
+
+    function renderQr(url) {
+        if (url === renderedQrUrl) {
+            return;
+        }
+        renderedQrUrl = url;
+        qrOut.innerHTML = '';
+        qrOut.classList.toggle('removed', !url);
+        if (!url) {
+            return;
+        }
+        try {
+            new QRCode(qrOut, {
+                text: url,
+                width: 320,
+                height: 320,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.L
+            });
+        } catch (e) {
+            console.error("Kunde inte skapa QR-kod", e);
+            qrOut.classList.add('removed');
+        }
+    }
+
+    // Wake Lock is secure-context only, so it is unavailable on http://<ip>:5555.
+    // The fallback is the classic trick: a muted looping video keeps the screen lit.
+    async function keepAwake() {
+        if (navigator.wakeLock) {
+            const lock = async () => {
+                try {
+                    await navigator.wakeLock.request('screen');
+                    return true;
+                } catch (e) {
+                    console.warn("Kunde inte hålla skärmen vaken", e);
+                    return false;
+                }
+            };
+            if (await lock()) {
+                document.addEventListener('visibilitychange', () => {
+                    if (document.visibilityState === 'visible') {
+                        lock();
+                    }
+                });
+                return;
+            }
+        }
+        playNosleepVideo();
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                playNosleepVideo();
+            }
+        });
+    }
+
+    function playNosleepVideo() {
+        // muted + playsinline autoplays without a gesture in most browsers;
+        // where it does not, the first tap retries it
+        nosleepVideo.play().catch(e => console.warn("Kunde inte starta väckarvideon", e));
+    }
+
+    function fullscreenSupported() {
+        return !!document.documentElement.requestFullscreen && !isStandalone();
+    }
+
+    function isStandalone() {
+        return window.navigator.standalone === true
+            || window.matchMedia('(display-mode: fullscreen)').matches
+            || window.matchMedia('(display-mode: standalone)').matches;
+    }
+
+    function updateHint() {
+        const show = fullscreenSupported() && !document.fullscreenElement;
+        hintOut.classList.toggle('removed', !show);
+    }
+
+    document.addEventListener('fullscreenchange', updateHint);
+
+    document.body.addEventListener('click', () => {
+        playNosleepVideo();
+        if (fullscreenSupported() && !document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(e => console.warn(e));
+        }
+    });
+
+    updateHint();
+</script>
+</body>
+</html>
