@@ -73,7 +73,7 @@
         }
 
         .product-button {
-            font-size: 20px;
+            font-size: 24px;
             padding: 20px;
             margin: 10px;
             flex: 0 0 30%;
@@ -336,6 +336,38 @@
             text-align: center;
         }
 
+        dialog.share-dialog {
+            background-color: #37474f;
+            padding: 20px 30px;
+            max-width: 90vw;
+        }
+
+        div.share-url {
+            color: white;
+            font-family: monospace;
+            font-size: 14px;
+            word-break: break-all;
+            text-align: center;
+            margin: 12px auto 0;
+            max-width: 380px;
+            -webkit-user-select: all;
+            user-select: all;
+        }
+
+        div.share-status {
+            color: #b0ec9e;
+            text-align: center;
+            font-size: 16px;
+            min-height: 20px;
+            margin-top: 8px;
+        }
+
+        button.share {
+            background-color: #37474f;
+            color: white;
+            border-color: #263238;
+        }
+
         .hidden {
             opacity: 0;
         }
@@ -427,7 +459,17 @@
         </div>
         <button class="ok" id="save-settings">Spara</button>
         <button class="cancel" onclick="document.getElementById('settings-dialog').close()">Avbryt</button>
+        <button class="share" id="share-button" type="button">Dela</button>
     </form>
+</dialog>
+
+<dialog class="share-dialog" id="share-dialog">
+    <div class="pay-header">Dela kassa</div>
+    <div class="pay-info" id="share-qr"></div>
+    <div class="share-url" id="share-url"></div>
+    <div class="share-status" id="share-status"></div>
+    <button class="ok" id="copy-share-url">Kopiera länk</button>
+    <button class="cancel" onclick="document.getElementById('share-dialog').close()">Klar</button>
 </dialog>
 
 <dialog class="pay-dialog" id="pay-dialog">
@@ -450,6 +492,8 @@
 
 <script>
     const EDIT_TIMEOUT = 1000
+    const DATA_PARAM = 'data'
+    const EMPTY_DATA = '{"p": [], "s": {}}'
 
     const utf8Encoder = new TextEncoder();
     const utf8Decoder = new TextDecoder();
@@ -502,11 +546,18 @@
     const swishMessageInput = document.getElementById('swish-message');
     const saveSettingsBtn = document.getElementById('save-settings');
 
+    const shareBtn = document.getElementById('share-button');
+    const shareDialog = document.getElementById('share-dialog');
+    const shareQr = document.getElementById('share-qr');
+    const shareUrlOut = document.getElementById('share-url');
+    const shareStatus = document.getElementById('share-status');
+    const copyShareUrlBtn = document.getElementById('copy-share-url');
+
     let editTimer;
     let longPressFired = false;
     let productUnderEdit;
 
-    let data = base64ToObject(localStorage.getItem("data") || btoa('{"p": [], "s": {}}'));
+    let data = loadData();
     let products = data.p.map(Product.from)
     let settings = data.s;
     console.log("products: " + JSON.stringify(products))
@@ -530,6 +581,74 @@
         const bytes = utf8Encoder.encode(JSON.stringify(str))
         const binString = String.fromCharCode(...bytes);
         return btoa(binString);
+    }
+
+    function base64ToBase64Url(base64) {
+        return base64
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_')
+            .replace(/=+$/, '');
+    }
+
+    function base64UrlToBase64(value) {
+        const base64 = value
+            .replace(/-/g, '+')
+            .replace(/_/g, '/');
+        return base64.padEnd(Math.ceil(base64.length / 4) * 4, '=');
+    }
+
+    function loadData() {
+        return importDataFromUrl() || storedData() || JSON.parse(EMPTY_DATA);
+    }
+
+    function storedData() {
+        const stored = localStorage.getItem("data");
+        if (!stored) {
+            return null;
+        }
+        try {
+            return base64ToObject(stored);
+        } catch (e) {
+            console.error("Kunde inte läsa sparad data", e);
+            return null;
+        }
+    }
+
+    function isEmptyData(d) {
+        return !d || ((d.p || []).length === 0 && Object.keys(d.s || {}).length === 0);
+    }
+
+    function importDataFromUrl() {
+        const param = new URLSearchParams(window.location.search).get(DATA_PARAM);
+        if (!param) {
+            return null;
+        }
+        // drop the parameter immediately so a reload never re-imports
+        history.replaceState(null, '', window.location.pathname + window.location.hash);
+        let imported;
+        try {
+            imported = base64ToObject(base64UrlToBase64(param));
+        } catch (e) {
+            console.error("Kunde inte tolka data i länken", e);
+            imported = null;
+        }
+        if (!imported || !Array.isArray(imported.p) || typeof imported.s !== 'object' || imported.s === null) {
+            alert("Länken innehåller ingen giltig kassadata.");
+            return null;
+        }
+        if (!isEmptyData(storedData())
+            && !confirm("Skriv över nuvarande produkter och inställningar?")) {
+            return null;
+        }
+        localStorage.setItem("data", objectToBase64(imported));
+        return imported;
+    }
+
+    function shareUrl() {
+        const url = new URL(window.location.href);
+        url.search = '';
+        url.hash = '';
+        return `${url.href}?${DATA_PARAM}=${base64ToBase64Url(objectToBase64(currentData()))}`;
     }
 
     function base64ToObject(base64) {
@@ -582,6 +701,56 @@
         showSettingsDialog();
     });
 
+    shareBtn.addEventListener('click', () => {
+        showShareDialog();
+    });
+
+    function showShareDialog() {
+        const url = shareUrl();
+        shareUrlOut.textContent = url;
+        shareStatus.textContent = '';
+        shareQr.innerHTML = '';
+        try {
+            new QRCode(shareQr, {
+                text: url,
+                width: 320,
+                height: 320,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.L
+            });
+        } catch (e) {
+            console.error("Kunde inte skapa QR-kod", e);
+            shareQr.innerHTML = '<span>För mycket data för QR-kod – använd länken</span>';
+        }
+        shareDialog.showModal();
+    }
+
+    function selectShareUrl() {
+        const range = document.createRange();
+        range.selectNodeContents(shareUrlOut);
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+    }
+
+    copyShareUrlBtn.addEventListener('click', async () => {
+        // navigator.clipboard is unavailable over plain http, fall back to selecting the text
+        if (!navigator.clipboard) {
+            selectShareUrl();
+            shareStatus.textContent = "Kopiera den markerade länken";
+            return;
+        }
+        try {
+            await navigator.clipboard.writeText(shareUrlOut.textContent);
+            shareStatus.textContent = "Länk kopierad!";
+        } catch (e) {
+            console.error("Kunde inte kopiera länken", e);
+            selectShareUrl();
+            shareStatus.textContent = "Kopiera den markerade länken";
+        }
+    });
+
     function validateProductInput() {
         const nameOk = productNameInput.value.trim().length > 0
         const priceOk = productPriceInput.value.trim().length > 0
@@ -595,11 +764,15 @@
     productNameInput.addEventListener('input', validateProductInput)
     productPriceInput.addEventListener('input', validateProductInput)
 
-    function saveState() {
-        data = {
+    function currentData() {
+        return {
             p: products.map(p => p.brief()),
             s: settings
         }
+    }
+
+    function saveState() {
+        data = currentData();
         localStorage.setItem("data", objectToBase64(data));
     }
 
