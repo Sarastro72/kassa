@@ -82,17 +82,6 @@
             color: #666;
         }
 
-        /* must stay in the layout for iOS to keep playing it, so hide it by size */
-        #nosleep {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 1px;
-            height: 1px;
-            opacity: 0;
-            pointer-events: none;
-        }
-
         .removed {
             display: none;
         }
@@ -105,8 +94,6 @@
 <div id="message"></div>
 <div id="status"></div>
 <div id="hint" class="removed">Tryck för helskärm</div>
-<video id="nosleep" muted playsinline loop preload="auto"
-       src="data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAMrbW9vdgAAAGxtdmhkAAAAAAAAAAAAAAAAAAAD6AAAB9AAAQAAAQAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAlV0cmFrAAAAXHRraGQAAAADAAAAAAAAAAAAAAABAAAAAAAAB9AAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAABAAAAAQAAAAAAAkZWR0cwAAABxlbHN0AAAAAAAAAAEAAAfQAAAAAAABAAAAAAHNbWRpYQAAACBtZGhkAAAAAAAAAAAAAAAAAABAAAAAgABVxAAAAAAALWhkbHIAAAAAAAAAAHZpZGUAAAAAAAAAAAAAAABWaWRlb0hhbmRsZXIAAAABeG1pbmYAAAAUdm1oZAAAAAEAAAAAAAAAAAAAACRkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAx1cmwgAAAAAQAAAThzdGJsAAAAuHN0c2QAAAAAAAAAAQAAAKhhdmMxAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAABAAEABIAAAASAAAAAAAAAABFUxhdmM2Mi4yOC4xMDIgbGlieDI2NAAAAAAAAAAAAAAAGP//AAAALmF2Y0MBQsAe/+EAFmdCwB7ZHsBEAAADAAQAAAMACDxYuSABAAVoy4PLIAAAABBwYXNwAAAAAQAAAAEAAAAUYnRydAAAAAAAAApAAAAAAAAAABhzdHRzAAAAAAAAAAEAAAACAABAAAAAABRzdHNzAAAAAAAAAAEAAAABAAAAHHN0c2MAAAAAAAAAAQAAAAEAAAACAAAAAQAAABxzdHN6AAAAAAAAAAAAAAACAAAChgAAAAoAAAAUc3RjbwAAAAAAAAABAAADWwAAAGJ1ZHRhAAAAWm1ldGEAAAAAAAAAIWhkbHIAAAAAAAAAAG1kaXJhcHBsAAAAAAAAAAAAAAAALWlsc3QAAAAlqXRvbwAAAB1kYXRhAAAAAQAAAABMYXZmNjIuMTIuMTAyAAAACGZyZWUAAAKYbWRhdAAAAnAGBf//bNxF6b3m2Ui3lizYINkj7u94MjY0IC0gY29yZSAxNjUgcjMyMjIgYjM1NjA1YSAtIEguMjY0L01QRUctNCBBVkMgY29kZWMgLSBDb3B5bGVmdCAyMDAzLTIwMjUgLSBodHRwOi8vd3d3LnZpZGVvbGFuLm9yZy94MjY0Lmh0bWwgLSBvcHRpb25zOiBjYWJhYz0wIHJlZj0zIGRlYmxvY2s9MTowOjAgYW5hbHlzZT0weDE6MHgxMTEgbWU9aGV4IHN1Ym1lPTcgcHN5PTEgcHN5X3JkPTEuMDA6MC4wMCBtaXhlZF9yZWY9MSBtZV9yYW5nZT0xNiBjaHJvbWFfbWU9MSB0cmVsbGlzPTEgOHg4ZGN0PTAgY3FtPTAgZGVhZHpvbmU9MjEsMTEgZmFzdF9wc2tpcD0xIGNocm9tYV9xcF9vZmZzZXQ9LTIgdGhyZWFkcz0xIGxvb2thaGVhZF90aHJlYWRzPTEgc2xpY2VkX3RocmVhZHM9MCBucj0wIGRlY2ltYXRlPTEgaW50ZXJsYWNlZD0wIGJsdXJheV9jb21wYXQ9MCBjb25zdHJhaW5lZF9pbnRyYT0wIGJmcmFtZXM9MCB3ZWlnaHRwPTAga2V5aW50PTI1MCBrZXlpbnRfbWluPTEgc2NlbmVjdXQ9NDAgaW50cmFfcmVmcmVzaD0wIHJjX2xvb2thaGVhZD00MCByYz1jcmYgbWJ0cmVlPTEgY3JmPTIzLjAgcWNvbXA9MC42MCBxcG1pbj0wIHFwbWF4PTY5IHFwc3RlcD00IGlwX3JhdGlvPTEuNDAgYXE9MToxLjAwAIAAAAAOZYiEBb///w9FAAFPf4AAAAAGQZo4CvqA"></video>
 
 <script src="lib/qrcode.js"></script>
 
@@ -121,9 +108,9 @@
     const messageOut = document.getElementById('message');
     const statusOut = document.getElementById('status');
     const hintOut = document.getElementById('hint');
-    const nosleepVideo = document.getElementById('nosleep');
 
     let renderedQrUrl = null;
+    let wakeLock = null;
 
     const sessionId = resolveSession();
     if (sessionId) {
@@ -194,40 +181,35 @@
         }
     }
 
-    // Wake Lock is secure-context only, so it is unavailable on http://<ip>:5555.
-    // The fallback is the classic trick: a muted looping video keeps the screen lit.
+    // Requires a secure context, so the display must be opened over https.
     async function keepAwake() {
-        if (navigator.wakeLock) {
-            const lock = async () => {
-                try {
-                    await navigator.wakeLock.request('screen');
-                    return true;
-                } catch (e) {
-                    console.warn("Kunde inte hålla skärmen vaken", e);
-                    return false;
-                }
-            };
-            if (await lock()) {
-                document.addEventListener('visibilitychange', () => {
-                    if (document.visibilityState === 'visible') {
-                        lock();
-                    }
-                });
-                return;
-            }
-        }
-        playNosleepVideo();
+        await requestWakeLock();
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible') {
-                playNosleepVideo();
+                // iOS releases the lock whenever the page is hidden
+                requestWakeLock();
             }
         });
     }
 
-    function playNosleepVideo() {
-        // muted + playsinline autoplays without a gesture in most browsers;
-        // where it does not, the first tap retries it
-        nosleepVideo.play().catch(e => console.warn("Kunde inte starta väckarvideon", e));
+    async function requestWakeLock() {
+        if (!navigator.wakeLock || wakeLock || document.visibilityState !== 'visible') {
+            return;
+        }
+        try {
+            // The sentinel has to stay referenced. An unreferenced one can be garbage
+            // collected, which silently releases the lock and the screen sleeps again.
+            wakeLock = await navigator.wakeLock.request('screen');
+            wakeLock.addEventListener('release', () => {
+                wakeLock = null;
+                updateHint();
+            });
+        } catch (e) {
+            // Safari grants this only from a user gesture, so the tap handler retries
+            wakeLock = null;
+            console.warn("Kunde inte hålla skärmen vaken", e);
+        }
+        updateHint();
     }
 
     function fullscreenSupported() {
@@ -240,15 +222,31 @@
             || window.matchMedia('(display-mode: standalone)').matches;
     }
 
+    function wakeHint() {
+        if (!window.isSecureContext) {
+            return 'Öppna via https för att hålla skärmen tänd';
+        }
+        if (!navigator.wakeLock) {
+            return 'Webbläsaren kan inte hålla skärmen tänd';
+        }
+        return wakeLock ? '' : 'Tryck på skärmen för att hålla den tänd';
+    }
+
+    // nothing is shown once the lock is held, so the hint doubles as a diagnostic
     function updateHint() {
-        const show = fullscreenSupported() && !document.fullscreenElement;
-        hintOut.classList.toggle('removed', !show);
+        const hints = [wakeHint()];
+        if (fullscreenSupported() && !document.fullscreenElement) {
+            hints.push('Tryck för helskärm');
+        }
+        const text = hints.filter(Boolean).join(' · ');
+        hintOut.textContent = text;
+        hintOut.classList.toggle('removed', text === '');
     }
 
     document.addEventListener('fullscreenchange', updateHint);
 
     document.body.addEventListener('click', () => {
-        playNosleepVideo();
+        requestWakeLock();
         if (fullscreenSupported() && !document.fullscreenElement) {
             document.documentElement.requestFullscreen().catch(e => console.warn(e));
         }

@@ -3,6 +3,14 @@
 <head>
     <link rel="icon" type="image/png" href="static/cash-register.png">
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Kassan">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#dddddd">
+    <link rel="apple-touch-icon" href="static/cash-register.png">
+    <link rel="manifest" href="static/kassa.webmanifest">
     <title>Kassan</title>
     <style>
         :root {
@@ -127,7 +135,18 @@
         }
 
         button.edit {
+            display: none;
             left: 10px;
+        }
+
+        button.fullscreen {
+            right: 60px;
+        }
+
+        #wake-status {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
         }
 
         table {
@@ -380,6 +399,7 @@
 <body>
 <div id="info-bar">
     <button class="edit" id="edit-button">✏️</button>
+    <button class="fullscreen removed" id="fullscreen-button">⛶</button>
     <button class="settings" id="settings-button">⚙️</button>
     <span class="header" id="title">Kassa</span>
 </div>
@@ -457,6 +477,7 @@
             <label>Meddelande:</label>
             <input type="text" id="swish-message">
         </div>
+        <div id="wake-status"></div>
         <button class="ok" id="save-settings">Spara</button>
         <button class="cancel" onclick="document.getElementById('settings-dialog').close()">Avbryt</button>
         <button class="share" id="share-button" type="button">Dela</button>
@@ -571,9 +592,13 @@
     const pairStatus = document.getElementById('pair-status');
     const unpairBtn = document.getElementById('unpair-button');
 
+    const fullscreenBtn = document.getElementById('fullscreen-button');
+    const wakeStatus = document.getElementById('wake-status');
+
     let editTimer;
     let longPressFired = false;
     let productUnderEdit;
+    let wakeLock = null;
 
     let data = loadData();
     let products = data.p.map(Product.from)
@@ -584,6 +609,8 @@
     let purchase = {};
     setTitle();
     renderProducts();
+    updateFullscreenButton();
+    requestWakeLock();
 
     document.addEventListener("keydown", (e) => {
         const keyName = e.key;
@@ -595,9 +622,12 @@
         }
     });
 
-    function objectToBase64(str) {
-        const bytes = utf8Encoder.encode(JSON.stringify(str))
-        const binString = String.fromCharCode(...bytes);
+    function objectToBase64(obj) {
+        const bytes = utf8Encoder.encode(JSON.stringify(obj))
+        let binString = '';
+        for (const byte of bytes) {
+            binString += String.fromCharCode(byte);
+        }
         return btoa(binString);
     }
 
@@ -628,6 +658,7 @@
             return base64ToObject(stored);
         } catch (e) {
             console.error("Kunde inte läsa sparad data", e);
+            alert("Kunde inte läsa sparade produkter och inställningar. Spara inte över dem – ta en kopia av webbläsarens localStorage först.");
             return null;
         }
     }
@@ -661,6 +692,65 @@
         localStorage.setItem("data", objectToBase64(imported));
         return imported;
     }
+
+    // Requires a secure context, so the register must be opened over https.
+    async function requestWakeLock() {
+        if (!navigator.wakeLock || wakeLock || document.visibilityState !== 'visible') {
+            return;
+        }
+        try {
+            // The sentinel has to stay referenced. An unreferenced one can be garbage
+            // collected, which silently releases the lock and the screen sleeps again.
+            wakeLock = await navigator.wakeLock.request('screen');
+            wakeLock.addEventListener('release', () => wakeLock = null);
+        } catch (e) {
+            // Safari grants this only from a user gesture, so every tap retries
+            wakeLock = null;
+            console.warn("Kunde inte hålla skärmen vaken", e);
+        }
+    }
+
+    function wakeStatusText() {
+        if (!window.isSecureContext) {
+            return 'Skärmen kan slockna – sidan är inte öppnad via https';
+        }
+        if (!navigator.wakeLock) {
+            return 'Skärmen kan slockna – webbläsaren saknar stöd';
+        }
+        return wakeLock ? 'Skärmen hålls tänd' : 'Skärmen kan slockna – tryck på skärmen';
+    }
+
+    function isStandalone() {
+        return window.navigator.standalone === true
+            || window.matchMedia('(display-mode: fullscreen)').matches
+            || window.matchMedia('(display-mode: standalone)').matches;
+    }
+
+    function fullscreenSupported() {
+        // iPhone Safari has no Fullscreen API at all, there the home screen shortcut is the way
+        return !!document.documentElement.requestFullscreen && !isStandalone();
+    }
+
+    function updateFullscreenButton() {
+        fullscreenBtn.classList.toggle('removed', !fullscreenSupported());
+    }
+
+    fullscreenBtn.addEventListener('click', () => {
+        if (document.fullscreenElement) {
+            document.exitFullscreen().catch(e => console.warn(e));
+        } else {
+            document.documentElement.requestFullscreen().catch(e => console.warn(e));
+        }
+    });
+
+    document.addEventListener('fullscreenchange', updateFullscreenButton);
+    document.addEventListener('pointerdown', requestWakeLock, {passive: true});
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            // iOS releases the lock whenever the page is hidden
+            requestWakeLock();
+        }
+    });
 
     // Kept under its own localStorage key, never inside "data", so the share
     // link (?data=…) cannot clone the pairing to another register.
@@ -730,10 +820,11 @@
         return `${url.href}?${DATA_PARAM}=${base64ToBase64Url(objectToBase64(currentData()))}`;
     }
 
+    // Deliberately atob/btoa rather than Uint8Array.fromBase64/toBase64:
+    // those only exist from Safari 18.2 and iPads on iOS 17 still have to work.
     function base64ToObject(base64) {
-        console.log(base64)
-        const bytes = Uint8Array.fromBase64(base64);
-        console.log(utf8Decoder.decode(bytes))
+        const binString = atob(base64);
+        const bytes = Uint8Array.from(binString, c => c.charCodeAt(0));
         return JSON.parse(utf8Decoder.decode(bytes))
     }
 
@@ -767,6 +858,7 @@
         titleInput.value = settings.title || '';
         swishNumberInput.value = settings.swishNumber || '';
         swishMessageInput.value = settings.swishMessage || '';
+        wakeStatus.textContent = wakeStatusText();
         settingsDialog.showModal();
     }
 

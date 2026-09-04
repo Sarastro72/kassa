@@ -1,0 +1,14 @@
+{
+    "name": "Kassan",
+    "short_name": "Kassan",
+    "display": "fullscreen",
+    "background_color": "#ffffff",
+    "theme_color": "#dddddd",
+    "icons": [
+        {
+            "src": "/static/cash-register.png",
+            "sizes": "190x190",
+            "type": "image/png"
+        }
+    ]
+}
