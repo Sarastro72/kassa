@@ -299,6 +299,12 @@
             border-color: #888;
         }
 
+        button.delete {
+            background-color: #c33;
+            color: white;
+            border-color: #911;
+        }
+
         button.pay-button {
             font-size: 20px;
             margin-bottom: 10px;
@@ -454,6 +460,7 @@
         </div>
         <button class="ok" id="create-product">Spara</button>
         <button class="cancel" onclick="document.getElementById('product-dialog').close()">Avbryt</button>
+        <button class="delete removed" id="delete-product" type="button">Ta bort</button>
     </form>
 </dialog>
 
@@ -569,6 +576,7 @@
     const productNameInput = document.getElementById('product-name');
     const productPriceInput = document.getElementById('product-price');
     const createProductBtn = document.getElementById('create-product');
+    const deleteProductBtn = document.getElementById('delete-product');
 
     const settingsDialog = document.getElementById('settings-dialog');
     const titleInput = document.getElementById('cashregister-name');
@@ -836,9 +844,12 @@
     }
 
     function showProductDialog() {
+        productUnderEdit = null
         productNameInput.value = '';
         productPriceInput.value = '';
         document.querySelector(`input.green`).checked = true
+        deleteProductBtn.classList.add('removed');
+        validateProductInput();
         productDialog.showModal();
     }
 
@@ -849,6 +860,8 @@
         productPriceInput.value = productUnderEdit.price;
         let color = productUnderEdit.color || 'green'
         document.querySelector(`input.${color}`).checked = true
+        deleteProductBtn.classList.remove('removed');
+        validateProductInput();
         productDialog.showModal();
     }
 
@@ -861,9 +874,7 @@
     }
 
     addProductBtn.addEventListener('click', () => {
-        productUnderEdit = null
         showProductDialog();
-        validateProductInput()
     });
 
     settingsBtn.addEventListener('click', () => {
@@ -977,6 +988,21 @@
         localStorage.setItem("data", objectToBase64(data));
     }
 
+    deleteProductBtn.addEventListener('click', () => {
+        if (!productUnderEdit || !confirm(`Ta bort ${productUnderEdit.name}?`)) {
+            return;
+        }
+        removeProduct(productUnderEdit);
+        productDialog.close();
+    });
+
+    function removeProduct(product) {
+        products = products.filter(p => p.name !== product.name);
+        saveState();
+        renderProducts();
+        publishState('idle');
+    }
+
     createProductBtn.addEventListener('click', (e) => {
         e.preventDefault();
         const name = productNameInput.value.trim();
@@ -990,9 +1016,10 @@
                     existing.price = price;
                     existing.color = color;
                 } else {
-                    products = products.filter(function (p) {
-                        return p.name !== existing.name
-                    });
+                    // saving with price 0 has always meant delete, keep that working
+                    removeProduct(existing);
+                    productDialog.close();
+                    return;
                 }
             } else {
                 products.push(new Product(name, price, color));
