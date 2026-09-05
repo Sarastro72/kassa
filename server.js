@@ -8,7 +8,7 @@ const ROOT = __dirname;
 const HEARTBEAT_MS = 20000;
 const SWEEP_MS = 60 * 60 * 1000;
 const SESSION_TTL_MS = 24 * SWEEP_MS;
-const MAX_BODY_BYTES = 8 * 1024;
+const MAX_BODY_BYTES = 64 * 1024;
 
 const HEX_ID = /^[0-9a-f]{8,64}$/;
 const API_PATH = /^\/api\/s\/([0-9a-f]{8,64})$/;

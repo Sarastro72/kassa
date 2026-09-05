@@ -28,10 +28,6 @@
             font-family: Arial, sans-serif;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 16px;
-            padding: 20px;
             -webkit-user-select: none;
             user-select: none;
             -webkit-touch-callout: none;
@@ -39,8 +35,52 @@
         }
 
         #title {
-            font-size: 40px;
+            flex: 0 0 auto;
+            font-size: 34px;
             text-align: center;
+            padding: 16px 20px;
+            background-color: #1c1c1c;
+            border-bottom: 1px solid #333;
+        }
+
+        /* the only scrolling area, so the title stays put */
+        #content {
+            flex: 1 1 auto;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #pricelist {
+            flex: 0 0 auto;
+            padding: 4px 20px 20px;
+        }
+
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 24px;
+            font-size: 26px;
+            padding: 12px 4px;
+            border-bottom: 1px solid #262626;
+        }
+
+        .price-row .price {
+            white-space: nowrap;
+            color: #ddd;
+        }
+
+        /* auto margins centre the pay view inside the scroll area */
+        #payview {
+            flex: 0 0 auto;
+            margin: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
         }
 
         #amount {
@@ -63,9 +103,12 @@
         }
 
         #message {
+            flex: 0 0 auto;
             font-size: 22px;
             color: #999;
             text-align: center;
+            margin: auto;
+            padding: 20px;
         }
 
         #status {
@@ -89,9 +132,14 @@
 </head>
 <body>
 <div id="title"></div>
-<div id="amount" class="removed"></div>
-<div id="qr" class="removed"></div>
-<div id="message"></div>
+<div id="content">
+    <div id="pricelist" class="removed"></div>
+    <div id="payview" class="removed">
+        <div id="amount"></div>
+        <div id="qr"></div>
+    </div>
+    <div id="message" class="removed"></div>
+</div>
 <div id="status"></div>
 <div id="hint" class="removed">Tryck för helskärm</div>
 
@@ -105,6 +153,8 @@
     const titleOut = document.getElementById('title');
     const amountOut = document.getElementById('amount');
     const qrOut = document.getElementById('qr');
+    const payView = document.getElementById('payview');
+    const priceList = document.getElementById('pricelist');
     const messageOut = document.getElementById('message');
     const statusOut = document.getElementById('status');
     const hintOut = document.getElementById('hint');
@@ -114,11 +164,16 @@
 
     const sessionId = resolveSession();
     if (sessionId) {
-        messageOut.textContent = 'Väntar på kassan…';
+        setMessage('Väntar på kassan…');
         connect(sessionId);
         keepAwake();
     } else {
-        messageOut.textContent = 'Skanna parkopplings-QR i kassan';
+        setMessage('Skanna parkopplings-QR i kassan');
+    }
+
+    function setMessage(text) {
+        messageOut.textContent = text;
+        messageOut.classList.toggle('removed', text === '');
     }
 
     function resolveSession() {
@@ -150,10 +205,38 @@
     function render(state) {
         const paying = state.mode === 'pay';
         titleOut.textContent = state.title || 'Kassan';
-        messageOut.textContent = '';
+        setMessage('');
+        payView.classList.toggle('removed', !paying);
+        priceList.classList.toggle('removed', paying);
         amountOut.textContent = paying ? `${state.amount} kr` : '';
-        amountOut.classList.toggle('removed', !paying);
         renderQr(paying ? state.swishUrl : null);
+        if (!paying) {
+            renderPriceList(state.products || []);
+        }
+    }
+
+    function renderPriceList(products) {
+        priceList.innerHTML = '';
+        if (products.length === 0) {
+            priceList.textContent = 'Inga produkter';
+            return;
+        }
+        for (const product of products) {
+            const row = document.createElement('div');
+            row.className = 'price-row';
+            const name = document.createElement('span');
+            name.textContent = product.n;
+            const price = document.createElement('span');
+            price.className = 'price';
+            price.textContent = `${formatPrice(product.p)} kr`;
+            row.append(name, price);
+            priceList.appendChild(row);
+        }
+    }
+
+    // same rule as the register's product buttons: only show decimals when there are any
+    function formatPrice(price) {
+        return price % 1 === 0 ? price : price.toFixed(2);
     }
 
     function renderQr(url) {

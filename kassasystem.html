@@ -539,12 +539,10 @@
         }
 
         brief() {
-            console.log(this)
             return {n: this.name, p: this.price, c: colors.indexOf(this.color)}
         }
 
         static from(obj) {
-            console.log(obj)
             return new Product(obj.n, obj.p, colors[obj.c] || "green");
         }
     }
@@ -789,7 +787,7 @@
     }
 
     function payState(mode) {
-        const state = {mode: mode, title: settings.title || ''};
+        const state = {mode: mode, title: settings.title || '', products: currentData().p};
         if (mode === 'pay') {
             state.amount = totalPrice();
             if (settings.swishNumber) {
@@ -1001,6 +999,7 @@
             }
             saveState()
             renderProducts();
+            publishState('idle');
             productDialog.close();
         }
     });
